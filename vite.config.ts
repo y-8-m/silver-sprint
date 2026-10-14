@@ -6,6 +6,9 @@ export default defineConfig({
   base: '/silver-sprint/',
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    css: {
+      include: [/\.module\.css$/],
+    },
   },
 });

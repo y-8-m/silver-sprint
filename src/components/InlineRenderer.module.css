@@ -1,0 +1,12 @@
+.code {
+  padding: 0.1em 0.25em;
+  background: ButtonFace;
+  color: ButtonText;
+  font-family: ui-monospace, monospace;
+}
+
+.glossary {
+  font-weight: 600;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}

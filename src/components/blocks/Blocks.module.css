@@ -1,0 +1,45 @@
+.text {
+  overflow-wrap: anywhere;
+}
+
+.code {
+  overflow-x: auto;
+  padding: 1rem;
+  background: ButtonFace;
+  color: ButtonText;
+  font-family: ui-monospace, monospace;
+  white-space: pre;
+}
+
+.steps {
+  padding-inline-start: 1.5rem;
+}
+
+.steps li + li {
+  margin-top: 0.5rem;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  margin-block: 1rem;
+}
+
+.table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem;
+  border: 1px solid GrayText;
+  text-align: start;
+  vertical-align: top;
+}
+
+.highlight {
+  background: ButtonFace;
+  color: ButtonText;
+  font-weight: 600;
+}

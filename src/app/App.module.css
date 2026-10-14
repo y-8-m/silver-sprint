@@ -1,5 +1,8 @@
 .app {
-  padding: 2rem;
+  max-width: 60rem;
+  margin-inline: auto;
+  padding: 1rem;
+  line-height: 1.6;
 }
 
 .issues {

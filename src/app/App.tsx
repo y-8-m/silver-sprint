@@ -10,7 +10,8 @@ export default function App() {
     <main className={styles.app}>
       <h1>Silver Sprint</h1>
       <p>Java Silver SE 17 Drill</p>
-      <p>Sample questions: {questions.length}</p>
+      <p>教材データとRendererの静的プレビュー</p>
+      <p>Questions: {questions.length}</p>
       <p>Glossary entries: {Object.keys(glossary).length}</p>
       <p>Data validation: {validation.valid ? 'OK' : 'ERROR'}</p>
       {!validation.valid && (
@@ -22,6 +23,10 @@ export default function App() {
           ))}
         </ul>
       )}
+      {validation.valid && questions.map((question) => (
+        <QuestionPreview question={question} key={question.id} />
+      ))}
     </main>
   );
 }
+import QuestionPreview from '../components/QuestionPreview';
