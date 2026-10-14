@@ -7,6 +7,7 @@ import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
 import { questions } from '../data/questions';
 import type { Question } from '../data/types';
+import { createLocalStorageStatsRepository, STATS_STORAGE_KEY } from '../stats/localStorageStatsRepository';
 
 // Native modal behavior is also checked in the browser.
 const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
@@ -24,10 +25,127 @@ beforeAll(() => {
     },
   });
 });
-beforeEach(() => vi.useFakeTimers());
+beforeEach(() => {
+  vi.useFakeTimers();
+  window.localStorage.clear();
+});
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
+  window.localStorage.clear();
   vi.useRealTimers();
+});
+
+describe('Drill Rating integration', () => {
+  const repository = () => createLocalStorageStatsRepository(window.localStorage);
+
+  it.each([
+    ['○ 分かった', 'known'],
+    ['△ 怪しい', 'unsure'],
+    ['× 分からなかった', 'unknown'],
+  ] as const)('records %s then advances to Question 2 with a fresh timer', (label, rating) => {
+    setup();
+    expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
+    click('開始');
+    expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
+    advance(6000);
+    expect(screen.getByRole('group', { name: '理解度' })).not.toBeNull();
+    click('一時停止');
+    click(label);
+    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
+    expect(timer().value).toBe(6000);
+    expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
+    expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
+    const saved = repository().load().questions[questions[0]!.id];
+    expect(saved).toEqual({
+      knownCount: rating === 'known' ? 1 : 0,
+      unsureCount: rating === 'unsure' ? 1 : 0,
+      unknownCount: rating === 'unknown' ? 1 : 0,
+      lastRating: rating,
+      lastAnsweredAt: new Date().toISOString(),
+    });
+    expect(Object.keys(repository().load().questions)).toEqual([questions[0]!.id]);
+  });
+
+  it('saves a rating on the last answer, finishes, and accumulates after RESET', () => {
+    setup([questions[0]!]);
+    click('開始');
+    click('答えを見る');
+    click('○ 分かった');
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    // jsdom queues a zero-delay storage event when setItem succeeds.
+    advance(0);
+    expect(vi.getTimerCount()).toBe(0);
+    click('もう一度');
+    advance(1000);
+    click('開始');
+    click('答えを見る');
+    click('△ 怪しい');
+    expect(repository().load().questions[questions[0]!.id]).toMatchObject({
+      knownCount: 1, unsureCount: 1, unknownCount: 0, lastRating: 'unsure', lastAnsweredAt: new Date().toISOString(),
+    });
+  });
+
+  it.each(['manual', 'timer'] as const)('keeps stats unchanged when moving on by %s', (mode) => {
+    const repo = repository();
+    const previous = { questions: { prior: {
+      knownCount: 2, unsureCount: 0, unknownCount: 0, lastRating: 'known' as const, lastAnsweredAt: '2026-10-15T00:00:00.000Z',
+    } } };
+    repo.save(previous);
+    const save = vi.spyOn(Storage.prototype, 'setItem');
+    setup(questions.slice(0, 2));
+    click('開始');
+    click('答えを見る');
+    if (mode === 'manual') click('次へ');
+    else advance(7000);
+    expect(screen.getByRole('status').textContent).toBe('Question 2 / 2');
+    expect(repo.load()).toEqual(previous);
+    click('答えを見る');
+    if (mode === 'manual') click('完了');
+    else advance(7000);
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(repo.load()).toEqual(previous);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('loads stored stats after unmount and accumulates a new rating', () => {
+    const view = setup([questions[0]!]);
+    click('開始');
+    click('答えを見る');
+    click('× 分からなかった');
+    view.unmount();
+    setup([questions[0]!]);
+    click('開始');
+    click('答えを見る');
+    click('○ 分かった');
+    expect(repository().load().questions[questions[0]!.id]).toMatchObject({ knownCount: 1, unknownCount: 1, lastRating: 'known' });
+  });
+
+  it('continues Drill and keeps memory counts if storage fails, including on the final rating', () => {
+    const save = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
+    setup([questions[0]!]);
+    click('開始');
+    click('答えを見る');
+    click('○ 分かった');
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('alert').textContent).toBe('戦績を保存できませんでした。');
+    click('もう一度');
+    save.mockRestore();
+    click('開始');
+    click('答えを見る');
+    click('△ 怪しい');
+    expect(repository().load().questions[questions[0]!.id]).toMatchObject({ knownCount: 1, unsureCount: 1 });
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('recovers from corrupted storage and saves a fresh record', () => {
+    window.localStorage.setItem(STATS_STORAGE_KEY, '{ broken json');
+    setup([questions[0]!]);
+    click('開始');
+    click('答えを見る');
+    click('○ 分かった');
+    expect(repository().load().questions[questions[0]!.id]?.knownCount).toBe(1);
+  });
 });
 afterAll(() => {
   for (const [name, descriptor] of [['showModal', originalShow], ['close', originalClose]] as const) {

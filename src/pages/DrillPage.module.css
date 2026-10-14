@@ -3,6 +3,7 @@
 }
 
 .tempo,
+.ratings,
 .timer {
   display: flex;
   flex-wrap: wrap;

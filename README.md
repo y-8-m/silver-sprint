@@ -88,7 +88,7 @@ validatorは網羅性を型チェックするため、未対応のBlockを追加
 `#/drill` は問題を定義順に1問ずつ出題するDrill。進行は `src/drill/drillReducer.ts` の状態機械
 （`ready → question → answer → question … → finished`、`RESET` で `ready`）が管理する。
 「答えを見る」でAnswer・Explanationを表示し、「次へ」で進む。最後の問題では「完了」になる。
-出題順の選択や保存などの副作用はreducerの外に置く方針で、現時点では採点・履歴・保存は実装していない。
+出題順の選択や保存などの副作用はreducerの外に置く。自動採点は行わず、自己評価による戦績保存を行う。
 教材の検証エラー時は開始できない。
 
 READYでTempoを選び、Question / Answerの時間切れでも自動進行する。
@@ -104,6 +104,24 @@ DrillPageが通知を `TIMER_EXPIRED` としてdispatchし、reducerがQuestion�
 Timer・Tempo・pauseはDrillStateの外で管理し、unmount時にTimerを解除する。
 hookとDrill連携の時間経過テストにはfake timersを使用している。
 
+ANSWERには「○ 分かった」「△ 怪しい」「× 分からなかった」の自己評価を表示する。
+評価時だけ問題ごとのknown / unsure / unknown件数と、最後の評価・ISO日時を保存して `NEXT` へ進む。
+「次へ」「完了」やTimer expiryは未評価として進み、戦績を変更しない。
+
+`src/stats/statsService.ts` の `recordRating` は日時を引数で受け取り、元Statsを変更せず集計するpure function。
+`useStats` がDrill進行とは別にStatsを保持し、初期化時の読み込みと評価イベント時の保存を担当する。
+保存先は `StatsRepository` で抽象化し、Storageを注入できるlocalStorage実装を使用する。
+keyは `silverSprint:v1:stats`、保存schemaは `{ version: 1, questions: ... }`。
+各recordには `knownCount`, `unsureCount`, `unknownCount`, `lastRating`, `lastAnsweredAt` を保存する。
+UIラベルや派生合計は保存しない。
+
+読み込み時はversion・object形状・各recordのカウントと評価・日時を検証し、破損・非対応version・読み込み失敗は空Statsへ戻す。
+継承プロパティを問題IDとして扱わず、`constructor` / `toString` / `__proto__` も自前のIDとして安全に扱う。
+Storage getterや保存が失敗してもDrillとメモリ上の集計は続け、「戦績を保存できませんでした。」を表示する。
+次の保存が成功すればメモリ上の累積Statsを保存し、表示を解除する。
+永続保存に失敗した分はページを離れると失われる。複数タブの同時更新の競合解決やschema migrationは未実装。
+Stats画面・復習モード・コース選択などは今後の工程。
+
 ## 静的Renderer
 
 `QuestionPreview → BlockRenderer → 各Block View → InlineRenderer` の順で描画する。
@@ -117,7 +135,7 @@ QuestionPreviewはcategory・topic・Question・Answer・Explanationを表示し
 - 教材中の文字列はReactの通常のテキスト描画を使い、HTMLとして挿入しない。
 
 問題一覧の答え・解説は標準の `details` で初期状態を折りたたむ。用語一覧のshortは非interactiveなPlainInlineRenderer（`components/`。InlineRendererもtext・codeの描画に共用）で表示し、詳細ボタンから共通dialogを開く。
-Glossary詳細は既存BlockRendererを使い、detail内の用語やrelatedを選ぶと同じdialogの内容を切り替える。学習進行や保存は実装していない。
+Glossary詳細は既存BlockRendererを使い、detail内の用語やrelatedを選ぶと同じdialogの内容を切り替える。Glossary自体はDrill進行や戦績保存を扱わない。
 
 描画テストは既存の `react-dom/server` の `renderToStaticMarkup` を使い、Node環境のVitestで実行する。
 主要分岐・列順・highlight・用語ID・QuestionPreviewの描画を確認する。ページと用語のinteraction testはjsdomとTesting Library、ルーティングのテストはMemoryRouterを使用する。
@@ -165,4 +183,4 @@ Java SE 17の言語仕様に合わせて記述。
 
 `vite.config.ts` の `base` はリポジトリ名に合わせて `/silver-sprint/`。
 `npm run build` が生成する `dist/` を公開対象にできる。
-公開・デプロイ設定・戦績・永続化は実装していない。
+公開・デプロイ設定は実装していない。自己評価の戦績はlocalStorageへ保存する。

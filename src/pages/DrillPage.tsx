@@ -9,15 +9,20 @@ import { getPhaseDurationMs, TEMPO_CONFIG } from '../drill/tempo';
 import type { Tempo } from '../drill/tempo';
 import { useDrillTimer } from '../drill/useDrillTimer';
 import { useGlossary } from '../glossary/GlossaryContext';
+import type { StatsRepository } from '../stats/statsRepository';
+import type { Rating } from '../stats/statsTypes';
+import { useStats } from '../stats/useStats';
 import styles from './DrillPage.module.css';
 
-export default function DrillPage({ questions, valid }: { questions: Question[]; valid: boolean }) {
+export default function DrillPage({ questions, valid, statsRepository }: { questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
   const questionIds = useMemo(() => questions.map((question) => question.id), [questions]);
   const questionsById = useMemo(() => new Map(questions.map((question) => [question.id, question])), [questions]);
   const [state, dispatch] = useReducer(drillReducer, questionIds, createInitialDrillState);
   const total = getTotalQuestions(state);
   const [tempo, setTempo] = useState<Tempo>('normal');
   const [manualPauseKey, setManualPauseKey] = useState<string | null>(null);
+  const { record, saveFailed } = useStats(statsRepository);
+  const saveError = saveFailed ? <p role="alert">戦績を保存できませんでした。</p> : null;
   const glossary = useGlossary();
   const id = getCurrentQuestionId(state);
   const question = id === undefined ? undefined : questionsById.get(id);
@@ -45,6 +50,7 @@ export default function DrillPage({ questions, valid }: { questions: Question[];
     return (
       <>
         <h2>Drill</h2>
+        {saveError}
         <fieldset className={styles.tempo}>
           <legend>Tempo</legend>
           {(Object.keys(TEMPO_CONFIG) as Tempo[]).map((option) => (
@@ -64,6 +70,7 @@ export default function DrillPage({ questions, valid }: { questions: Question[];
     return (
       <section className={styles.finished}>
         <h2>Drill Complete</h2>
+        {saveError}
         <p>{total} / {total} questions completed</p>
         <button className={styles.action} type="button" onClick={() => dispatch({ type: 'RESET' })}>もう一度</button>
       </section>
@@ -83,6 +90,7 @@ export default function DrillPage({ questions, valid }: { questions: Question[];
   return (
     <>
       <h2>Drill</h2>
+      {saveError}
       <p className={styles.progress} role="status">Question {getCurrentQuestionNumber(state)} / {total}</p>
       <div className={styles.timer}>
         <span>Time: {(remainingMs / 1000).toFixed(1)}s</span>
@@ -111,6 +119,21 @@ export default function DrillPage({ questions, valid }: { questions: Question[];
           </>
         )}
       </article>
+      {state.phase === 'answer' && (
+        <fieldset className={styles.ratings}>
+          <legend>理解度</legend>
+          {([
+            ['known', '○ 分かった'],
+            ['unsure', '△ 怪しい'],
+            ['unknown', '× 分からなかった'],
+          ] satisfies [Rating, string][]).map(([rating, label]) => (
+            <button className={styles.action} type="button" key={rating} onClick={() => {
+              record(question.id, rating);
+              dispatch({ type: 'NEXT' });
+            }}>{label}</button>
+          ))}
+        </fieldset>
+      )}
       {state.phase === 'question' ? (
         <button className={styles.action} type="button" onClick={() => dispatch({ type: 'REVEAL_ANSWER' })}>答えを見る</button>
       ) : (
