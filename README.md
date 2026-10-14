@@ -1,6 +1,6 @@
 # Silver Sprint
 
-Java Silver SE 17 Drill。今回の実装は教材データの土台と起動確認画面のみ。
+Java Silver SE 17 Drill。教材データの土台と、Rendererを確認する開発用の静的プレビュー。
 
 ## 開発
 
@@ -15,8 +15,8 @@ npm run build
 npm run preview
 ```
 
-開発サーバーの `/silver-sprint/` を開くと、問題数・用語数・整合性検証結果が表示される。
-検証エラー時は各エラーの `path` と `message` を画面で確認できる。
+開発サーバーの `/silver-sprint/` を開くと、問題数・用語数・整合性検証結果とサンプル5問が表示される。
+検証エラー時は各エラーの `path` と `message` を画面で確認できる。この場合、問題プレビューは描画しない。
 `npm test` は単発実行、`npm run test:watch` は監視実行。
 
 ## 構成
@@ -26,6 +26,19 @@ src/
 ├ app/
 │  ├ App.tsx
 │  └ App.module.css
+├ components/
+│  ├ InlineRenderer.tsx
+│  ├ InlineRenderer.module.css
+│  ├ QuestionPreview.tsx
+│  ├ QuestionPreview.module.css
+│  ├ renderers.test.tsx
+│  └ blocks/
+│     ├ BlockRenderer.tsx
+│     ├ TextBlockView.tsx
+│     ├ CodeBlockView.tsx
+│     ├ StepsBlockView.tsx
+│     ├ ComparisonBlockView.tsx
+│     └ Blocks.module.css
 ├ data/
 │  ├ types.ts
 │  ├ helpers.ts
@@ -57,6 +70,25 @@ A = 概念理解、B = 実行順・状態遷移、C = Java固有ルール、D = 
 
 新しいBlockを追加するときは、型定義とvalidatorの `switch` を更新する。
 validatorは網羅性を型チェックするため、未対応のBlockを追加するとコンパイルエラーになる。
+
+## 静的Renderer
+
+`QuestionPreview → BlockRenderer → 各Block View → InlineRenderer` の順で描画する。
+QuestionPreviewはcategory・topic・Question・Answer・Explanationを表示し、Inlineの内部構造は扱わない。
+
+- Inlineのtextは要素wrapperなしの文字列、codeは `<code>`、glossaryは強調した `<span>`。用語IDは `data-glossary-id` に保持する。
+- TextBlockは `<p>`、CodeBlockは改行・字下げを保持する `<pre><code>`、StepsBlockは `<ol><li>`。
+- ComparisonBlockは `<table>`。見出しとセルを `columns` 順で描画し、行keyは `row.id`、`highlight` 行は背景と太字で区別する。
+- コードと比較表は横スクロールできる。色はsystem colorを使用する。
+- BlockRendererとInlineRendererは `never` で分岐の網羅性をチェックする。PromptはQuestion型の `PromptBlock[]` 制約を維持したままBlockRendererへ渡す。
+- 教材中の文字列はReactの通常のテキスト描画を使い、HTMLとして挿入しない。
+
+用語のhover・click・detail展開、学習進行や保存は実装していない。
+Glossaryのshortとdetailも同じRendererで描画できることをテストで確認しているが、用語一覧ページは設けていない。
+
+描画テストは既存の `react-dom/server` の `renderToStaticMarkup` を使い、Node環境のVitestで実行する。
+追加依存はなく、主要分岐・列順・highlight・用語ID・5問の統合描画を確認する。
+スクロールや実際のCSSレイアウトはブラウザで確認する。
 
 ## 整合性検証
 
@@ -92,6 +124,8 @@ Java SE 17の言語仕様に合わせて記述。
 - A〜Dの分類に沿ったコース内容・問題の網羅性は今後整備する。
 - `timeWeight` の値域・基準時間との関係は未定義。サンプルでは複合問題に `1.5` を設定したが、validatorで数値範囲は検証していない。
 - 空の配列・空文字列は今回の検証対象外。描画を実装するときに必要な制約を決める。
+- Block・Inline・stepsにはIDがないため、静的Rendererのkeyは配列indexを使用している。将来、要素の並べ替えや要素ごとの状態を持つ場合はkeyの方針を検討する。
+- 比較表のcell不足は型だけでは禁止できない。validatorで検出し、Appは正常な教材だけをプレビューする。個別Rendererを他の画面で使うときも検証済み教材を渡す。
 - 用語間の相互参照は許可している。detailを展開するUIでは再帰的に用語を自動展開するかどうかを決める。
 
 ## GitHub Pages

@@ -1,0 +1,79 @@
+.term {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.term:hover,
+.term:focus-visible {
+  text-decoration-style: solid;
+}
+
+.term:focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 1rem));
+  max-height: calc(100vh - 1rem);
+  overflow-wrap: anywhere;
+  padding: 0.65rem;
+  border: 1px solid GrayText;
+  background: Canvas;
+  color: CanvasText;
+  font: 0.9rem/1.5 system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.dialog {
+  box-sizing: border-box;
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid GrayText;
+  background: Canvas;
+  color: CanvasText;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 30%);
+}
+
+.dialog h2 {
+  margin-top: 0;
+}
+
+.related {
+  padding-inline-start: 1.5rem;
+}
+
+.related button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.close {
+  margin-top: 1rem;
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+}
