@@ -1,0 +1,25 @@
+.progress {
+  font-weight: 600;
+}
+
+.area {
+  margin-block: 1rem;
+  padding-block: 0.5rem;
+  border-top: 1px solid GrayText;
+  overflow-wrap: anywhere;
+}
+
+.area h4 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.action {
+  margin-block: 1rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+}
+
+.finished {
+  padding-block: 1rem;
+}

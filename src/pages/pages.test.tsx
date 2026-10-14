@@ -8,6 +8,7 @@ import { glossary } from '../data/glossary';
 import { code, term, text } from '../data/helpers';
 import { questions } from '../data/questions';
 import type { GlossaryDictionary, Question } from '../data/types';
+import DrillPage from './DrillPage';
 
 // jsdom does not implement native showModal/close; browser QA covers modality.
 const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
@@ -44,7 +45,7 @@ function setup(path = '/', data: { questions?: Question[]; glossary?: GlossaryDi
 }
 
 describe('Pages and routing', () => {
-  it('navigates Home, Questions, and Glossary with a current-page indicator', async () => {
+  it('navigates Home, Questions, Glossary, and Drill with a current-page indicator', async () => {
     const { user } = setup();
     expect(screen.getByText('Questions: 5')).not.toBeNull();
     expect(screen.getByText('Glossary entries: 6')).not.toBeNull();
@@ -58,6 +59,9 @@ describe('Pages and routing', () => {
     await user.click(nav.getByRole('link', { name: 'Glossary' }));
     expect(screen.getAllByRole('article')).toHaveLength(6);
     expect(nav.getByRole('link', { name: 'Glossary' }).getAttribute('aria-current')).toBe('page');
+    await user.click(nav.getByRole('link', { name: 'Drill' }));
+    expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
+    expect(nav.getByRole('link', { name: 'Drill' }).getAttribute('aria-current')).toBe('page');
     await user.click(nav.getByRole('link', { name: 'Home' }));
     expect(screen.queryByRole('article')).toBeNull();
   });
@@ -174,7 +178,7 @@ describe('Pages and routing', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it.each(['/questions', '/glossary'])('blocks invalid content on %s and reports diagnostics on Home', async (path) => {
+  it.each(['/questions', '/glossary', '/drill'])('blocks invalid content on %s and reports diagnostics on Home', async (path) => {
     const { user } = setup(path, { questions: [...questions, questions[0]!] });
     expect(screen.getByRole('alert').textContent).toContain('教材データにエラー');
     expect(screen.queryByRole('article')).toBeNull();
@@ -182,5 +186,68 @@ describe('Pages and routing', () => {
     expect(screen.getByText('Data validation: ERROR')).not.toBeNull();
     expect(screen.getByText('questions[5].id')).not.toBeNull();
     expect(screen.getByText(/Question ID .* is duplicated/)).not.toBeNull();
+  });
+});
+
+describe('Manual Drill', () => {
+  it('reveals, advances through all five questions in definition order, finishes, and resets', async () => {
+    const { user } = setup('/drill');
+    expect(screen.getByText('全5問を順番に出題します。')).not.toBeNull();
+    await user.click(screen.getByRole('button', { name: '開始' }));
+    const visited: string[] = [];
+    for (let number = 1; number <= questions.length; number++) {
+      expect(screen.getByRole('status').textContent).toBe(`Question ${number} / 5`);
+      expect(screen.queryByRole('heading', { name: 'Answer' })).toBeNull();
+      expect(screen.queryByRole('heading', { name: 'Explanation' })).toBeNull();
+      const card = screen.getByRole('article');
+      visited.push(card.getAttribute('data-question-id')!);
+      const prompt = card.textContent;
+      await user.click(screen.getByRole('button', { name: '答えを見る' }));
+      expect(screen.getByRole('article')).toBe(card);
+      expect(card.textContent).toContain(prompt);
+      expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
+      expect(screen.getByRole('heading', { name: 'Explanation' })).not.toBeNull();
+      await user.click(screen.getByRole('button', { name: number === questions.length ? '完了' : '次へ' }));
+    }
+    expect(visited).toEqual(questions.map((question) => question.id));
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByText('5 / 5 questions completed')).not.toBeNull();
+    expect(screen.queryByRole('article')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'もう一度' }));
+    expect(screen.getByText('全5問を順番に出題します。')).not.toBeNull();
+    await user.click(screen.getByRole('button', { name: '開始' }));
+    expect(screen.getByRole('status').textContent).toBe('Question 1 / 5');
+  });
+
+  it('uses the existing glossary tooltip and dialog without changing the Drill phase', async () => {
+    const { user } = setup('/drill');
+    await user.click(screen.getByRole('button', { name: '開始' }));
+    await user.click(screen.getByRole('button', { name: '答えを見る' }));
+    const trigger = within(screen.getByRole('article')).getByRole('button', { name: 'ローカル変数' });
+    await user.hover(trigger);
+    expect(screen.getByRole('tooltip').textContent).toContain('メソッドやコンストラクタ');
+    await user.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: 'ローカル変数' });
+    await user.click(within(dialog).getByRole('button', { name: '閉じる' }));
+    expect(screen.getByRole('status').textContent).toBe('Question 1 / 5');
+    expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
+    await user.click(screen.getByRole('button', { name: '次へ' }));
+    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
+  });
+
+  it('disables starting an empty session', () => {
+    setup('/drill', { questions: [] });
+    expect(screen.getByText('出題できる問題がありません。')).not.toBeNull();
+    expect((screen.getByRole('button', { name: '開始' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('falls back safely if an active session ID is no longer in the supplied material', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<MemoryRouter><DrillPage questions={questions} valid /></MemoryRouter>);
+    await user.click(screen.getByRole('button', { name: '開始' }));
+    rerender(<MemoryRouter><DrillPage questions={[]} valid /></MemoryRouter>);
+    expect(screen.getByRole('alert').textContent).toBe('問題データを取得できません。');
+    await user.click(screen.getByRole('button', { name: '最初に戻る' }));
+    expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
   });
 });

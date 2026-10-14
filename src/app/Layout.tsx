@@ -16,6 +16,7 @@ export default function Layout() {
           <NavLink to="/" end>Home</NavLink>
           <NavLink to="/questions">Questions</NavLink>
           <NavLink to="/glossary">Glossary</NavLink>
+          <NavLink to="/drill">Drill</NavLink>
         </nav>
       </header>
       <main><Outlet /></main>
