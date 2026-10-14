@@ -1,6 +1,6 @@
 # Silver Sprint
 
-Java Silver SE 17 Drill。教材データの土台と、Rendererを確認する開発用の静的プレビュー。
+Java Silver SE 17 Drill。教材データを問題一覧・用語一覧で参照し、用語の説明を確認できる学習アプリの土台。
 
 ## 開発
 
@@ -15,8 +15,9 @@ npm run build
 npm run preview
 ```
 
-開発サーバーの `/silver-sprint/` を開くと、問題数・用語数・整合性検証結果とサンプル5問が表示される。
-検証エラー時は各エラーの `path` と `message` を画面で確認できる。この場合、問題プレビューは描画しない。
+HashRouterを使用し、`/silver-sprint/#/` はHome、`#/questions` は問題一覧、`#/glossary` は用語一覧。
+Homeには問題数・用語数・整合性検証結果を表示する。検証エラー時は各エラーの `path` と `message` を確認でき、両一覧の教材は描画しない。
+問題一覧はcategoryとtopic、用語一覧は検索とcategoryでAND条件の絞り込みができる。フィルタはページ内stateのみで、ページを離れるとリセットされる。
 `npm test` は単発実行、`npm run test:watch` は監視実行。
 
 ## 構成
@@ -25,7 +26,9 @@ npm run preview
 src/
 ├ app/
 │  ├ App.tsx
-│  └ App.module.css
+│  ├ App.module.css
+│  ├ Layout.tsx
+│  └ router.tsx
 ├ components/
 │  ├ InlineRenderer.tsx
 │  ├ InlineRenderer.module.css
@@ -50,6 +53,8 @@ src/
 │  └ global.css
 └ main.tsx
 ```
+
+`src/pages/` にHome・Question List・Glossary List、`src/glossary/` に共通Provider・用語interaction・詳細dialogを配置している。
 
 ## 教材の記述
 
@@ -76,18 +81,18 @@ validatorは網羅性を型チェックするため、未対応のBlockを追加
 `QuestionPreview → BlockRenderer → 各Block View → InlineRenderer` の順で描画する。
 QuestionPreviewはcategory・topic・Question・Answer・Explanationを表示し、Inlineの内部構造は扱わない。
 
-- Inlineのtextは要素wrapperなしの文字列、codeは `<code>`、glossaryは強調した `<span>`。用語IDは `data-glossary-id` に保持する。
+- Inlineのtextは要素wrapperなしの文字列、codeは `<code>`、glossaryは用語button。用語IDは `data-glossary-id` に保持し、hover/focusでshort、click/tapで詳細dialogを表示する。
 - TextBlockは `<p>`、CodeBlockは改行・字下げを保持する `<pre><code>`、StepsBlockは `<ol><li>`。
 - ComparisonBlockは `<table>`。見出しとセルを `columns` 順で描画し、行keyは `row.id`、`highlight` 行は背景と太字で区別する。
 - コードと比較表は横スクロールできる。色はsystem colorを使用する。
 - BlockRendererとInlineRendererは `never` で分岐の網羅性をチェックする。PromptはQuestion型の `PromptBlock[]` 制約を維持したままBlockRendererへ渡す。
 - 教材中の文字列はReactの通常のテキスト描画を使い、HTMLとして挿入しない。
 
-用語のhover・click・detail展開、学習進行や保存は実装していない。
-Glossaryのshortとdetailも同じRendererで描画できることをテストで確認しているが、用語一覧ページは設けていない。
+問題一覧の答え・解説は標準の `details` で初期状態を折りたたむ。用語一覧のshortは非interactiveなPlainInlineRendererで表示し、詳細ボタンから共通dialogを開く。
+Glossary詳細は既存BlockRendererを使い、detail内の用語やrelatedを選ぶと同じdialogの内容を切り替える。学習進行や保存は実装していない。
 
 描画テストは既存の `react-dom/server` の `renderToStaticMarkup` を使い、Node環境のVitestで実行する。
-追加依存はなく、主要分岐・列順・highlight・用語ID・5問の統合描画を確認する。
+主要分岐・列順・highlight・用語ID・QuestionPreviewの描画を確認する。ページと用語のinteraction testはjsdomとTesting Library、ルーティングのテストはMemoryRouterを使用する。
 スクロールや実際のCSSレイアウトはブラウザで確認する。
 
 ## 整合性検証
@@ -132,4 +137,4 @@ Java SE 17の言語仕様に合わせて記述。
 
 `vite.config.ts` の `base` はリポジトリ名に合わせて `/silver-sprint/`。
 `npm run build` が生成する `dist/` を公開対象にできる。
-今回、公開・デプロイ設定・React Router・ドリル・タイマー・戦績・永続化は実装していない。
+公開・デプロイ設定・ドリル・タイマー・戦績・永続化は実装していない。

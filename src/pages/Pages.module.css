@@ -1,0 +1,30 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid GrayText;
+}
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.filters input,
+.filters select {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 0.35rem;
+  font: inherit;
+}
+.glossaryCard {
+  padding-block: 1rem;
+  border-top: 1px solid GrayText;
+  overflow-wrap: anywhere;
+}
+.glossaryCard h3 { margin-top: 0; }
+.glossaryCard button { padding: 0.35rem 0.75rem; font: inherit; }
+.empty { padding: 1rem; border: 1px solid GrayText; }
+.issues { overflow-wrap: anywhere; }

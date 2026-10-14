@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import App from '../app/App';
+import QuestionPreview from './QuestionPreview';
 import { glossary } from '../data/glossary';
 import { code, term, text } from '../data/helpers';
 import { questions } from '../data/questions';
@@ -109,12 +109,9 @@ describe('BlockRenderer', () => {
 
 describe('Content preview', () => {
   it('renders all five questions with their category, topic, prompt, answer, and explanation', () => {
-    const html = renderToStaticMarkup(<App />);
-
-    expect(html).toContain('<h1>Silver Sprint</h1>');
-    expect(html).toContain('Questions: 5');
-    expect(html).toContain('Glossary entries: 6');
-    expect(html).toContain('Data validation: OK');
+    const html = renderToStaticMarkup(
+      <>{questions.map((question) => <QuestionPreview question={question} key={question.id} />)}</>,
+    );
     expect(html.match(/<article\b/g)).toHaveLength(5);
     expect(html.match(/<h3>Question<\/h3>/g)).toHaveLength(5);
     expect(html.match(/<h3>Answer<\/h3>/g)).toHaveLength(5);
