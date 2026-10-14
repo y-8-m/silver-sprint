@@ -1,14 +1,14 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import type { GlossaryInline } from '../data/types';
 import { useGlossary } from './GlossaryContext';
 import GlossaryShortTooltip from './GlossaryShortTooltip';
-import PlainInlineRenderer from './PlainInlineRenderer';
+import PlainInlineRenderer from '../components/PlainInlineRenderer';
 import styles from './Glossary.module.css';
 
 export default function GlossaryTerm({ node }: { node: GlossaryInline }) {
   const context = useGlossary();
   const entry = context?.getEntry(node.glossaryId);
-  const ref = useRef<HTMLButtonElement>(null);
+  const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
   const tooltipId = useId();
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -20,7 +20,7 @@ export default function GlossaryTerm({ node }: { node: GlossaryInline }) {
     <>
       <button
         type="button"
-        ref={ref}
+        ref={setAnchor}
         className={styles.term}
         data-glossary-id={node.glossaryId}
         aria-haspopup="dialog"
@@ -45,8 +45,8 @@ export default function GlossaryTerm({ node }: { node: GlossaryInline }) {
       >
         {node.text}
       </button>
-      {showShort && ref.current && (
-        <GlossaryShortTooltip id={tooltipId} anchor={ref.current} entry={entry} />
+      {showShort && anchor && (
+        <GlossaryShortTooltip id={tooltipId} anchor={anchor} entry={entry} />
       )}
     </>
   );

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import InvalidContentNotice from '../components/InvalidContentNotice';
 import { inlineNodesToText } from '../data/inlineNodesToText';
 import type { GlossaryDictionary } from '../data/types';
 import { useGlossary } from '../glossary/GlossaryContext';
-import PlainInlineRenderer from '../glossary/PlainInlineRenderer';
+import PlainInlineRenderer from '../components/PlainInlineRenderer';
 import styles from './Pages.module.css';
 
 export default function GlossaryPage({ glossary, valid }: { glossary: GlossaryDictionary; valid: boolean }) {
@@ -11,7 +11,7 @@ export default function GlossaryPage({ glossary, valid }: { glossary: GlossaryDi
   const [category, setCategory] = useState('');
   const context = useGlossary();
   if (!valid) {
-    return <><h2>Glossary</h2><p role="alert">教材データにエラーがあるため表示できません。<Link to="/">Home</Link>で検証結果を確認してください。</p></>;
+    return <InvalidContentNotice title="Glossary" action="表示" />;
   }
   const entries = Object.entries(glossary);
   const categories = [...new Set(entries.map(([, entry]) => entry.category))].sort((a, b) => a.localeCompare(b, 'ja'));

@@ -1,5 +1,5 @@
 import type { InlineNode } from '../data/types';
-import styles from '../components/InlineRenderer.module.css';
+import styles from './InlineRenderer.module.css';
 
 export default function PlainInlineRenderer({ nodes }: { nodes: InlineNode[] }) {
   return (

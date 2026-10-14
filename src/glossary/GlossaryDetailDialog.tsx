@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import BlockRenderer from '../components/blocks/BlockRenderer';
 import { useGlossary } from './GlossaryContext';
-import PlainInlineRenderer from './PlainInlineRenderer';
+import PlainInlineRenderer from '../components/PlainInlineRenderer';
 import styles from './Glossary.module.css';
 
 export default function GlossaryDetailDialog() {

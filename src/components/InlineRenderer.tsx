@@ -1,6 +1,6 @@
 import type { InlineNode } from '../data/types';
 import GlossaryTerm from '../glossary/GlossaryTerm';
-import styles from './InlineRenderer.module.css';
+import PlainInlineRenderer from './PlainInlineRenderer';
 
 type InlineRendererProps = {
   nodes: InlineNode[];
@@ -9,20 +9,11 @@ type InlineRendererProps = {
 export default function InlineRenderer({ nodes }: InlineRendererProps) {
   return (
     <>
-      {nodes.map((node, index) => {
-        switch (node.type) {
-          case 'text':
-            return node.text;
-          case 'code':
-            return <code className={styles.code} key={index}>{node.text}</code>;
-          case 'glossary':
-            return <GlossaryTerm node={node} key={index} />;
-          default: {
-            const unhandled: never = node;
-            return unhandled;
-          }
-        }
-      })}
+      {nodes.map((node, index) => (
+        node.type === 'glossary'
+          ? <GlossaryTerm node={node} key={index} />
+          : <PlainInlineRenderer nodes={[node]} key={index} />
+      ))}
     </>
   );
 }

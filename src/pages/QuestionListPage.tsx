@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import InvalidContentNotice from '../components/InvalidContentNotice';
 import QuestionPreview from '../components/QuestionPreview';
 import type { Question } from '../data/types';
 import styles from './Pages.module.css';
@@ -10,8 +10,15 @@ export default function QuestionListPage({ questions, valid }: { questions: Ques
   const [category, setCategory] = useState('');
   const [topic, setTopic] = useState('');
   if (!valid) {
-    return <><h2>Questions</h2><p role="alert">教材データにエラーがあるため表示できません。<Link to="/">Home</Link>で検証結果を確認してください。</p></>;
+    return <InvalidContentNotice title="Questions" action="表示" />;
   }
+  // Drop a topic that cannot match the newly chosen category instead of silently emptying the list.
+  const changeCategory = (next: string) => {
+    setCategory(next);
+    if (topic && !questions.some((question) => (!next || question.category === next) && question.topic === topic)) {
+      setTopic('');
+    }
+  };
   const topics = [...new Set(questions.map((question) => question.topic))];
   const filtered = questions.filter((question) => (
     (!category || question.category === category) && (!topic || question.topic === topic)
@@ -21,7 +28,7 @@ export default function QuestionListPage({ questions, valid }: { questions: Ques
       <h2>Questions</h2>
       <div className={styles.filters}>
         <label>Question category
-          <select value={category} onChange={(event) => setCategory(event.target.value)}>
+          <select value={category} onChange={(event) => changeCategory(event.target.value)}>
             <option value="">All</option>
             {categories.map(([value, label]) => <option value={value} key={value}>{value} = {label}</option>)}
           </select>

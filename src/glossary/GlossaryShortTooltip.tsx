@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { GlossaryEntry } from '../data/types';
-import PlainInlineRenderer from './PlainInlineRenderer';
+import PlainInlineRenderer from '../components/PlainInlineRenderer';
 import styles from './Glossary.module.css';
 
 type GlossaryShortTooltipProps = {

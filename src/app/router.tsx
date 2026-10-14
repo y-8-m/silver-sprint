@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import type { GlossaryDictionary, Question } from '../data/types';
 import { validateContent } from '../data/validate';
@@ -13,7 +14,7 @@ type AppRoutesProps = { questions: Question[]; glossary: GlossaryDictionary };
 
 // App supplies HashRouter; tests can supply MemoryRouter.
 export default function AppRoutes({ questions, glossary }: AppRoutesProps) {
-  const validation = validateContent(questions, glossary);
+  const validation = useMemo(() => validateContent(questions, glossary), [questions, glossary]);
   return (
     <GlossaryProvider glossary={glossary}>
       <Routes>

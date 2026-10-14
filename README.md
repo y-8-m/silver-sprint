@@ -17,7 +17,7 @@ npm run preview
 
 HashRouterを使用し、`/silver-sprint/#/` はHome、`#/questions` は問題一覧、`#/glossary` は用語一覧。
 Homeには問題数・用語数・整合性検証結果を表示する。検証エラー時は各エラーの `path` と `message` を確認でき、両一覧の教材は描画しない。
-問題一覧はcategoryとtopic、用語一覧は検索とcategoryでAND条件の絞り込みができる。フィルタはページ内stateのみで、ページを離れるとリセットされる。
+問題一覧はcategoryとtopic（categoryを変えたとき、新しいcategoryに存在しないtopicは自動で解除する）、用語一覧は検索とcategoryでAND条件の絞り込みができる。フィルタはページ内stateのみで、ページを離れるとリセットされる。
 `npm test` は単発実行、`npm run test:watch` は監視実行。
 
 ## 構成
@@ -32,6 +32,8 @@ src/
 ├ components/
 │  ├ InlineRenderer.tsx
 │  ├ InlineRenderer.module.css
+│  ├ PlainInlineRenderer.tsx
+│  ├ InvalidContentNotice.tsx
 │  ├ QuestionPreview.tsx
 │  ├ QuestionPreview.module.css
 │  ├ renderers.test.tsx
@@ -42,6 +44,11 @@ src/
 │     ├ StepsBlockView.tsx
 │     ├ ComparisonBlockView.tsx
 │     └ Blocks.module.css
+├ drill/
+│  ├ drillTypes.ts
+│  ├ drillReducer.ts
+│  ├ drillSelectors.ts
+│  └ *.test.ts
 ├ data/
 │  ├ types.ts
 │  ├ helpers.ts
@@ -54,7 +61,7 @@ src/
 └ main.tsx
 ```
 
-`src/pages/` にHome・Question List・Glossary List、`src/glossary/` に共通Provider・用語interaction・詳細dialogを配置している。
+`src/pages/` にHome・Question List・Glossary List・Drill、`src/glossary/` に共通Provider・用語interaction・詳細dialogを配置している。
 
 ## 教材の記述
 
@@ -76,6 +83,14 @@ A = 概念理解、B = 実行順・状態遷移、C = Java固有ルール、D = 
 新しいBlockを追加するときは、型定義とvalidatorの `switch` を更新する。
 validatorは網羅性を型チェックするため、未対応のBlockを追加するとコンパイルエラーになる。
 
+## Drill
+
+`#/drill` は問題を定義順に1問ずつ出題する手動のDrill。進行は `src/drill/drillReducer.ts` の状態機械
+（`ready → question → answer → question … → finished`、`RESET` で `ready`）が管理する。
+「答えを見る」でAnswer・Explanationを表示し、「次へ」で進む。最後の問題では「完了」になる。
+出題順の選択や保存などの副作用はreducerの外に置く方針で、現時点では採点・履歴・保存は実装していない。
+教材の検証エラー時は開始できない。
+
 ## 静的Renderer
 
 `QuestionPreview → BlockRenderer → 各Block View → InlineRenderer` の順で描画する。
@@ -88,7 +103,7 @@ QuestionPreviewはcategory・topic・Question・Answer・Explanationを表示し
 - BlockRendererとInlineRendererは `never` で分岐の網羅性をチェックする。PromptはQuestion型の `PromptBlock[]` 制約を維持したままBlockRendererへ渡す。
 - 教材中の文字列はReactの通常のテキスト描画を使い、HTMLとして挿入しない。
 
-問題一覧の答え・解説は標準の `details` で初期状態を折りたたむ。用語一覧のshortは非interactiveなPlainInlineRendererで表示し、詳細ボタンから共通dialogを開く。
+問題一覧の答え・解説は標準の `details` で初期状態を折りたたむ。用語一覧のshortは非interactiveなPlainInlineRenderer（`components/`。InlineRendererもtext・codeの描画に共用）で表示し、詳細ボタンから共通dialogを開く。
 Glossary詳細は既存BlockRendererを使い、detail内の用語やrelatedを選ぶと同じdialogの内容を切り替える。学習進行や保存は実装していない。
 
 描画テストは既存の `react-dom/server` の `renderToStaticMarkup` を使い、Node環境のVitestで実行する。

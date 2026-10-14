@@ -1,7 +1,7 @@
 import { useMemo, useReducer } from 'react';
-import { Link } from 'react-router-dom';
 import BlockRenderer from '../components/blocks/BlockRenderer';
 import InlineRenderer from '../components/InlineRenderer';
+import InvalidContentNotice from '../components/InvalidContentNotice';
 import type { Question } from '../data/types';
 import { createInitialDrillState, drillReducer } from '../drill/drillReducer';
 import { getCurrentQuestionId, getCurrentQuestionNumber, getTotalQuestions, isLastQuestion } from '../drill/drillSelectors';
@@ -14,7 +14,7 @@ export default function DrillPage({ questions, valid }: { questions: Question[];
   const total = getTotalQuestions(state);
 
   if (!valid) {
-    return <><h2>Drill</h2><p role="alert">教材データにエラーがあるため開始できません。<Link to="/">Home</Link>で検証結果を確認してください。</p></>;
+    return <InvalidContentNotice title="Drill" action="開始" />;
   }
 
   if (state.phase === 'ready') {

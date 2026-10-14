@@ -82,6 +82,17 @@ describe('Pages and routing', () => {
     expect(screen.getByRole('status').textContent).toBe('1 / 5 questions');
   });
 
+  it('clears a selected topic that cannot match the newly chosen category', async () => {
+    const { user } = setup('/questions');
+    await user.selectOptions(screen.getByLabelText('Topic'), '後置インクリメント');
+    await user.selectOptions(screen.getByLabelText('Question category'), 'A');
+    expect((screen.getByLabelText('Topic') as HTMLSelectElement).value).toBe('');
+    expect(screen.getByRole('status').textContent).not.toBe('0 / 5 questions');
+    await user.selectOptions(screen.getByLabelText('Topic'), '後置インクリメント');
+    await user.selectOptions(screen.getByLabelText('Question category'), 'B');
+    expect((screen.getByLabelText('Topic') as HTMLSelectElement).value).toBe('後置インクリメント');
+  });
+
   it('derives topic options from the supplied questions', () => {
     setup('/questions', { questions: [{ ...questions[0]!, topic: '追加候補テスト' }] });
     expect(screen.getByRole('option', { name: '追加候補テスト' })).not.toBeNull();
