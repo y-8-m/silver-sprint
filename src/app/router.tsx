@@ -8,6 +8,7 @@ import GlossaryPage from '../pages/GlossaryPage';
 import DrillPage from '../pages/DrillPage';
 import HomePage from '../pages/HomePage';
 import QuestionListPage from '../pages/QuestionListPage';
+import StatsPage from '../pages/StatsPage';
 import Layout from './Layout';
 
 type AppRoutesProps = { questions: Question[]; glossary: GlossaryDictionary };
@@ -23,6 +24,7 @@ export default function AppRoutes({ questions, glossary }: AppRoutesProps) {
           <Route path="questions" element={<QuestionListPage questions={questions} valid={validation.valid} />} />
           <Route path="glossary" element={<GlossaryPage glossary={glossary} valid={validation.valid} />} />
           <Route path="drill" element={<DrillPage questions={questions} valid={validation.valid} />} />
+          <Route path="stats" element={<StatsPage questions={questions} valid={validation.valid} />} />
           <Route path="*" element={<><h2>ページが見つかりません。</h2><Link to="/">Homeへ戻る</Link></>} />
         </Route>
       </Routes>

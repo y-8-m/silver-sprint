@@ -11,6 +11,7 @@ import { useDrillTimer } from '../drill/useDrillTimer';
 import { useGlossary } from '../glossary/GlossaryContext';
 import type { StatsRepository } from '../stats/statsRepository';
 import type { Rating } from '../stats/statsTypes';
+import { getRatingLabel, RATING_LABELS } from '../stats/statsFormatting';
 import { useStats } from '../stats/useStats';
 import styles from './DrillPage.module.css';
 
@@ -122,15 +123,11 @@ export default function DrillPage({ questions, valid, statsRepository }: { quest
       {state.phase === 'answer' && (
         <fieldset className={styles.ratings}>
           <legend>理解度</legend>
-          {([
-            ['known', '○ 分かった'],
-            ['unsure', '△ 怪しい'],
-            ['unknown', '× 分からなかった'],
-          ] satisfies [Rating, string][]).map(([rating, label]) => (
+          {(Object.keys(RATING_LABELS) as Rating[]).map((rating) => (
             <button className={styles.action} type="button" key={rating} onClick={() => {
               record(question.id, rating);
               dispatch({ type: 'NEXT' });
-            }}>{label}</button>
+            }}>{getRatingLabel(rating)}</button>
           ))}
         </fieldset>
       )}

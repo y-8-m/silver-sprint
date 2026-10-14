@@ -1,0 +1,26 @@
+.section {
+  margin-block: 1.5rem;
+  padding-block: 0.5rem;
+  border-top: 1px solid GrayText;
+  overflow-wrap: anywhere;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 1rem;
+}
+
+.summary dd { margin: 0.25rem 0 0; font-weight: 600; }
+.list li { margin-block: 1rem; }
+.list p { margin-block: 0.35rem; }
+
+.tableScroll { overflow-x: auto; }
+.tableScroll table { width: 100%; border-collapse: collapse; }
+.tableScroll caption { text-align: start; margin-bottom: 0.5rem; }
+.tableScroll th,
+.tableScroll td { padding: 0.6rem; border: 1px solid GrayText; text-align: start; }
+.tableScroll thead th { white-space: nowrap; }
+.tableScroll th[scope='row'] { min-width: 12rem; }
+.tableScroll time { white-space: nowrap; }
+.clear { padding: 0.5rem 1rem; font: inherit; }

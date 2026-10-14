@@ -13,6 +13,34 @@ afterEach(() => {
 });
 
 describe('useStats', () => {
+  it('clears memory and storage immediately and starts fresh on the next rating', () => {
+    const repository = createLocalStorageStatsRepository(window.localStorage);
+    const clear = vi.spyOn(repository, 'clear');
+    const { result } = renderHook(() => useStats(repository), { wrapper: StrictMode });
+    act(() => result.current.record('q1', 'unknown'));
+    act(() => result.current.clear());
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(result.current.stats).toEqual(createEmptyStats());
+    expect(repository.load()).toEqual(createEmptyStats());
+    expect(result.current.clearFailed).toBe(false);
+    act(() => result.current.record('q2', 'known'));
+    expect(Object.keys(repository.load().questions)).toEqual(['q2']);
+  });
+
+  it('empties memory even if clear fails and resets the error on the next successful operation', () => {
+    const repository = { load: createEmptyStats, save: vi.fn(() => false), clear: vi.fn(() => false) };
+    const { result } = renderHook(() => useStats(repository));
+    act(() => result.current.record('q1', 'known'));
+    expect(result.current.saveFailed).toBe(true);
+    act(() => result.current.clear());
+    expect(result.current.stats).toEqual(createEmptyStats());
+    expect(result.current.saveFailed).toBe(false);
+    expect(result.current.clearFailed).toBe(true);
+    repository.clear.mockReturnValue(true);
+    act(() => result.current.clear());
+    expect(result.current.clearFailed).toBe(false);
+  });
+
   it('loads only at initialization and saves once per event in StrictMode', () => {
     const repository = { load: vi.fn(createEmptyStats), save: vi.fn(() => true), clear: vi.fn(() => true) };
     const { result, rerender } = renderHook(() => useStats(repository), { wrapper: StrictMode });
