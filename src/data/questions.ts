@@ -4,7 +4,7 @@ import type { Question } from './types';
 export const questions = [
   {
     id: 'local-variable-initialization',
-    category: 'A',
+    category: 'C',
     topic: 'ローカル変数の初期化',
     prompt: [{ type: 'text', content: [text('初期値を指定せず宣言したローカル変数は、自動的に初期化される？')] }],
     answer: [text('されない。値を読み出す前に代入が必要。')],
@@ -121,7 +121,7 @@ System.out.println(x + ":" + y);`,
   },
   {
     id: 'constructor-call-chain',
-    category: 'D',
+    category: 'B',
     topic: 'コンストラクタの呼び出し順序',
     timeWeight: 1.5,
     prompt: [

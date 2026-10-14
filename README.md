@@ -47,6 +47,10 @@ src/
 - 用語IDは `glossary` オブジェクトのkeyだけで管理する。
 - 問題と用語は `satisfies` で型チェックする。
 
+`Question.category` はその問題で主に何を問うかを表す単一値。
+A = 概念理解、B = 実行順・状態遷移、C = Java固有ルール、D = API・語彙として分類する。
+サンプルもこの分類に合わせているが、A〜D全体の正式な問題体系はまだ整備していない。
+
 `constructor` という用語IDはObjectの同名プロパティと重なり、辞書全体の
 `satisfies GlossaryDictionary` だけでは内部のBlockの `type` が文字列に広がる。
 この項目には追加で `satisfies GlossaryEntry` を指定し、型チェックを維持している。
@@ -62,6 +66,7 @@ validatorは網羅性を型チェックするため、未対応のBlockを追加
 - prompt / answer / explanation、用語short / detailのGlossary参照先。
 - stepsの各項目、comparisonの全セル内にあるGlossary参照先。
 - comparisonの列key重複、必要なcellの不足、列にない余分なcell。
+- 同一comparison内の行ID重複。異なるcomparison同士で同じ行IDを使うことは許可する。
 - 用語の `related` の参照先。
 
 エラー位置の例：`questions[4].explanation[1].rows[0].cells["target"][1].glossaryId`。
@@ -84,9 +89,9 @@ Java SE 17の言語仕様に合わせて記述。
 
 ## 次工程で確認する点
 
-- A〜Dのコース内容は未定義。サンプルのcategory割り当ては仮置き。
+- A〜Dの分類に沿ったコース内容・問題の網羅性は今後整備する。
 - `timeWeight` の値域・基準時間との関係は未定義。サンプルでは複合問題に `1.5` を設定したが、validatorで数値範囲は検証していない。
-- 比較表の行ID重複・空の配列・空文字列は今回の検証対象外。描画を実装するときに必要な制約を決める。
+- 空の配列・空文字列は今回の検証対象外。描画を実装するときに必要な制約を決める。
 - 用語間の相互参照は許可している。detailを展開するUIでは再帰的に用語を自動展開するかどうかを決める。
 
 ## GitHub Pages

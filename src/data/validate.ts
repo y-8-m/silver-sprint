@@ -70,8 +70,19 @@ function validateBlocks(
           columnKeys.add(column.key);
         });
 
+        const rowIds = new Set<string>();
+
         block.rows.forEach((row, rowIndex) => {
-          const cellsPath = `${blockPath}.rows[${rowIndex}].cells`;
+          const rowPath = `${blockPath}.rows[${rowIndex}]`;
+          const cellsPath = `${rowPath}.cells`;
+
+          if (rowIds.has(row.id)) {
+            issues.push({
+              path: `${rowPath}.id`,
+              message: `Comparison row ID "${row.id}" is duplicated.`,
+            });
+          }
+          rowIds.add(row.id);
 
           columnKeys.forEach((key) => {
             if (!Object.hasOwn(row.cells, key)) {

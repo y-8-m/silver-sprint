@@ -147,6 +147,47 @@ describe('validateContent', () => {
     });
   });
 
+  it('detects duplicate row IDs within the same comparison block', () => {
+    const comparison = makeComparison();
+    comparison.rows.push({
+      id: 'first',
+      cells: { name: [text('項目2')], description: [text('説明2')] },
+    });
+
+    expect(validateContent([makeQuestion({ explanation: [comparison] })], knownGlossary)).toEqual({
+      valid: false,
+      issues: [{
+        path: 'questions[0].explanation[0].rows[1].id',
+        message: 'Comparison row ID "first" is duplicated.',
+      }],
+    });
+  });
+
+  it('allows the same row ID in different comparison blocks', () => {
+    expect(validateContent([
+      makeQuestion({ explanation: [makeComparison(), makeComparison()] }),
+    ], knownGlossary)).toEqual({ valid: true, issues: [] });
+  });
+
+  it('detects duplicate comparison row IDs in glossary detail', () => {
+    const comparison = makeComparison();
+    comparison.rows.push({
+      id: 'first',
+      cells: { name: [text('項目2')], description: [text('説明2')] },
+    });
+    const dictionary: GlossaryDictionary = {
+      known: { ...knownGlossary.known, detail: [comparison] },
+    };
+
+    expect(validateContent([], dictionary)).toEqual({
+      valid: false,
+      issues: [{
+        path: 'glossary["known"].detail[0].rows[1].id',
+        message: 'Comparison row ID "first" is duplicated.',
+      }],
+    });
+  });
+
   it('detects a missing comparison cell in a later row', () => {
     const comparison = makeComparison();
     comparison.rows.push({ id: 'second', cells: { name: [text('項目2')] } });
