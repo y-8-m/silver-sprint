@@ -34,6 +34,14 @@ describe('drillReducer', () => {
     expect(drillReducer(stateAt('answer', 2), { type: 'NEXT' })).toEqual(stateAt('finished', 2));
   });
 
+  it.each([
+    ['question', 1, 'answer', 1],
+    ['answer', 1, 'question', 2],
+    ['answer', 2, 'finished', 2],
+  ] as const)('handles %s at index %i + TIMER_EXPIRED', (phase, index, nextPhase, nextIndex) => {
+    expect(drillReducer(stateAt(phase, index), { type: 'TIMER_EXPIRED' })).toEqual(stateAt(nextPhase, nextIndex));
+  });
+
   it.each<DrillPhase>(['question', 'answer', 'finished'])('resets %s to ready at index zero', (phase) => {
     const state = stateAt(phase, 2);
     const reset = drillReducer(state, { type: 'RESET' });
@@ -44,6 +52,7 @@ describe('drillReducer', () => {
   it.each<{ phase: DrillPhase; action: DrillAction }>([
     { phase: 'ready', action: { type: 'REVEAL_ANSWER' } },
     { phase: 'ready', action: { type: 'NEXT' } },
+    { phase: 'ready', action: { type: 'TIMER_EXPIRED' } },
     { phase: 'question', action: { type: 'START' } },
     { phase: 'question', action: { type: 'NEXT' } },
     { phase: 'answer', action: { type: 'START' } },
@@ -51,6 +60,7 @@ describe('drillReducer', () => {
     { phase: 'finished', action: { type: 'START' } },
     { phase: 'finished', action: { type: 'REVEAL_ANSWER' } },
     { phase: 'finished', action: { type: 'NEXT' } },
+    { phase: 'finished', action: { type: 'TIMER_EXPIRED' } },
   ])('ignores $phase + $action.type with the same state reference', ({ phase, action }) => {
     const state = stateAt(phase, phase === 'finished' ? 2 : 0);
     expect(drillReducer(state, action)).toBe(state);

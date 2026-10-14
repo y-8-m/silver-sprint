@@ -10,4 +10,5 @@ export type DrillAction =
   | { type: 'START' }
   | { type: 'REVEAL_ANSWER' }
   | { type: 'NEXT' }
+  | { type: 'TIMER_EXPIRED' }
   | { type: 'RESET' };

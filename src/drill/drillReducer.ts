@@ -19,9 +19,15 @@ export function drillReducer(state: DrillState, action: DrillAction): DrillState
       return state.currentIndex < state.questionIds.length - 1
         ? { ...state, phase: 'question', currentIndex: state.currentIndex + 1 }
         : { ...state, phase: 'finished' };
+    case 'TIMER_EXPIRED':
+      if (state.phase === 'question') return drillReducer(state, { type: 'REVEAL_ANSWER' });
+      if (state.phase === 'answer') return drillReducer(state, { type: 'NEXT' });
+      return state;
     case 'RESET':
       return { ...state, phase: 'ready', currentIndex: 0 };
-    default:
-      return state;
+    default: {
+      const unhandled: never = action;
+      return unhandled;
+    }
   }
 }

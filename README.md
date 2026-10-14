@@ -85,11 +85,24 @@ validatorは網羅性を型チェックするため、未対応のBlockを追加
 
 ## Drill
 
-`#/drill` は問題を定義順に1問ずつ出題する手動のDrill。進行は `src/drill/drillReducer.ts` の状態機械
+`#/drill` は問題を定義順に1問ずつ出題するDrill。進行は `src/drill/drillReducer.ts` の状態機械
 （`ready → question → answer → question … → finished`、`RESET` で `ready`）が管理する。
 「答えを見る」でAnswer・Explanationを表示し、「次へ」で進む。最後の問題では「完了」になる。
 出題順の選択や保存などの副作用はreducerの外に置く方針で、現時点では採点・履歴・保存は実装していない。
 教材の検証エラー時は開始できない。
+
+READYでTempoを選び、Question / Answerの時間切れでも自動進行する。
+`src/drill/tempo.ts` に基準時間を集約している（Slow: 10秒 / 10秒、Normal: 6秒 / 7秒、Fast: 3秒 / 4秒）。
+両phaseとも基準時間 × `Question.timeWeight`（未指定は1）を使用する。
+値域のvalidator検証はまだないため、計算結果が非正数・非有限の場合だけ基準時間へ戻す。
+
+`useDrillTimer` はdeadlineと現在時刻の差で残時間を約100msごとに更新し、期限通知を1期間に1回だけ行う。
+DrillPageが通知を `TIMER_EXPIRED` としてdispatchし、reducerがQuestionならAnswer、Answerなら次問またはFinishedへ進める。
+現在の問題ID・index・phaseまたはduration変更でTimerをリセットする。
+「一時停止」やGlossary詳細表示中は残時間を保持し、再開後はそこから続く。
+手動pauseは問題・phase変更時に解除される。Glossary short tooltipは時間へ影響しない。
+Timer・Tempo・pauseはDrillStateの外で管理し、unmount時にTimerを解除する。
+hookとDrill連携の時間経過テストにはfake timersを使用している。
 
 ## 静的Renderer
 
@@ -142,7 +155,7 @@ Java SE 17の言語仕様に合わせて記述。
 ## 次工程で確認する点
 
 - A〜Dの分類に沿ったコース内容・問題の網羅性は今後整備する。
-- `timeWeight` の値域・基準時間との関係は未定義。サンプルでは複合問題に `1.5` を設定したが、validatorで数値範囲は検証していない。
+- `timeWeight` は両phaseの基準時間への倍率。サンプルの複合問題は `1.5`。validatorで数値範囲はまだ検証していない。
 - 空の配列・空文字列は今回の検証対象外。描画を実装するときに必要な制約を決める。
 - Block・Inline・stepsにはIDがないため、静的Rendererのkeyは配列indexを使用している。将来、要素の並べ替えや要素ごとの状態を持つ場合はkeyの方針を検討する。
 - 比較表のcell不足は型だけでは禁止できない。validatorで検出し、Appは正常な教材だけをプレビューする。個別Rendererを他の画面で使うときも検証済み教材を渡す。
@@ -152,4 +165,4 @@ Java SE 17の言語仕様に合わせて記述。
 
 `vite.config.ts` の `base` はリポジトリ名に合わせて `/silver-sprint/`。
 `npm run build` が生成する `dist/` を公開対象にできる。
-公開・デプロイ設定・ドリル・タイマー・戦績・永続化は実装していない。
+公開・デプロイ設定・戦績・永続化は実装していない。
