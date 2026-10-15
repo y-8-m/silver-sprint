@@ -58,6 +58,8 @@ describe('Review Drill', () => {
     setup();
     expect(screen.getByRole('heading', { name: 'Review' })).not.toBeNull();
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
+    expect(screen.queryByRole('group', { name: 'Course' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Order' })).toBeNull();
     click('開始');
     expectQuestion(firstId, 1, 2);
     click('答えを見る');
@@ -167,7 +169,7 @@ describe('Review Drill', () => {
   it('keeps normal Drill as the complete material sequence despite weak stats', () => {
     const original = seedStats();
     setup(original, '/drill');
-    expect(screen.getByText('全5問を順番に出題します。')).not.toBeNull();
+    expect(screen.getByText('対象: 5問')).not.toBeNull();
     click('開始');
     for (let index = 0; index < questions.length; index++) {
       expectQuestion(questions[index]!.id, index + 1, 5);
@@ -176,7 +178,7 @@ describe('Review Drill', () => {
     }
     expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
     click('もう一度');
-    expect(screen.getByText('全5問を順番に出題します。')).not.toBeNull();
+    expect(screen.getByText('対象: 5問')).not.toBeNull();
     expect(repo().load()).toEqual(original);
   });
 
@@ -185,7 +187,7 @@ describe('Review Drill', () => {
     click('開始');
     const nav = within(screen.getByRole('navigation'));
     fireEvent.click(nav.getByRole('link', { name: 'Drill' }));
-    expect(screen.getByText('全5問を順番に出題します。')).not.toBeNull();
+    expect(screen.getByText('対象: 5問')).not.toBeNull();
     click('開始');
     expectQuestion(firstId, 1, 5);
     fireEvent.click(nav.getByRole('link', { name: 'Review' }));
@@ -203,6 +205,22 @@ describe('Review Drill', () => {
     setup(createEmptyStats(), '/stats');
     expect(screen.queryByRole('link', { name: '弱点を復習' })).toBeNull();
     expect(screen.getByText('弱点候補はありません。')).not.toBeNull();
+  });
+
+  it('keeps Review in weak material order after a filtered Random Drill', () => {
+    setup(seedStats(), '/drill');
+    fireEvent.click(screen.getByRole('radio', { name: 'B 実行順・状態遷移' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Random' }));
+    click('開始');
+    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Review' }));
+    expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
+    expect(screen.queryByRole('group', { name: 'Course' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Order' })).toBeNull();
+    click('開始');
+    expectQuestion(firstId, 1, 2);
+    click('答えを見る');
+    click('次へ');
+    expectQuestion(thirdId, 2, 2);
   });
 
   it('blocks invalid material even with saved weak stats', () => {

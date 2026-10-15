@@ -104,7 +104,10 @@ validatorは網羅性を型チェックするため、未対応のBlockを追加
 
 ## Drill
 
-`#/drill` は問題を定義順に1問ずつ出題するDrill。進行は `src/drill/drillReducer.ts` の状態機械
+`#/drill` はREADYでCourse（A〜D / Mixed）とOrder（Sequential / Random）を選び、1問ずつ出題するDrill。初期値はMixed / Sequential / Normalで、全問を教材定義順に出題する。
+`src/drill/sessionSequence.ts` がカテゴリで絞り込み、ID抽出後に順序を適用する。Randomは乱数源を注入できるFisher–Yatesで、元教材を変更しない。
+READYでCourse / Orderを変えると対象件数とsequenceを更新する。開始後はsession snapshotを固定し、完了後の「もう一度」で同じ設定から再生成する（Randomは再shuffle）。対象0問では開始できない。設定は保存しない。
+進行は `src/drill/drillReducer.ts` の状態機械
 （`ready → question → answer → question … → finished`、`RESET` で `ready`）が管理する。
 「答えを見る」でAnswer・Explanationを表示し、「次へ」で進む。最後の問題では「完了」になる。
 出題順の選択や保存などの副作用はreducerの外に置く。自動採点は行わず、自己評価による戦績保存を行う。

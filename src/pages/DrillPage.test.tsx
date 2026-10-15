@@ -7,6 +7,7 @@ import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
 import { questions } from '../data/questions';
 import type { Question } from '../data/types';
+import * as sessionSequence from '../drill/sessionSequence';
 import { createLocalStorageStatsRepository, STATS_BACKUP_STORAGE_KEY, STATS_STORAGE_KEY } from '../stats/localStorageStatsRepository';
 
 // Native modal behavior is also checked in the browser.
@@ -189,6 +190,130 @@ function advance(ms: number) {
 function timer() {
   return screen.getByRole('progressbar', { name: '残り時間' }) as HTMLProgressElement;
 }
+
+describe('Drill Course / Order integration', () => {
+  function select(name: string) {
+    fireEvent.click(screen.getByRole('radio', { name }));
+  }
+
+  function expectQuestion(id: string) {
+    expect(screen.getByRole('article').getAttribute('data-question-id')).toBe(id);
+    expect(screen.queryByRole('group', { name: 'Course' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Order' })).toBeNull();
+  }
+
+  it('defaults to Mixed / Sequential / Normal and visits all five questions in material order', () => {
+    setup();
+    for (const name of ['Mixed', 'Sequential', 'Normal']) {
+      expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
+    }
+    expect(screen.getByRole('status').textContent).toBe('対象: 5問');
+    click('開始');
+    for (const question of questions) {
+      expectQuestion(question.id);
+      click('答えを見る');
+      click('○ 分かった');
+    }
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.queryByRole('radio')).toBeNull();
+  });
+
+  it.each([
+    ['A 概念理解', 'A'], ['B 実行順・状態遷移', 'B'], ['C Java固有ルール', 'C'],
+  ] as const)('updates the count and visits only %s, regardless of saved ratings', (label, category) => {
+    const repo = createLocalStorageStatsRepository(window.localStorage);
+    const matching = questions.filter((question) => question.category === category);
+    repo.save({ questions: Object.fromEntries(matching.map((question, index) => [question.id, {
+      knownCount: index === 0 ? 1 : 0, unsureCount: index === 0 ? 0 : 1, unknownCount: 0,
+      lastRating: index === 0 ? 'known' : 'unsure', lastAnsweredAt: '2026-10-15T00:00:00.000Z',
+    }])) });
+    setup();
+    select(label);
+    expect(screen.getByRole('status').textContent).toBe(`対象: ${matching.length}問`);
+    click('開始');
+    for (const question of matching) {
+      expectQuestion(question.id);
+      click('答えを見る');
+      click('× 分からなかった');
+    }
+    expect(screen.getByText(`${matching.length} / ${matching.length} questions completed`)).not.toBeNull();
+    click('もう一度');
+    expect((screen.getByRole('radio', { name: label }) as HTMLInputElement).checked).toBe(true);
+    click('開始');
+    expectQuestion(matching[0]!.id);
+  });
+
+  it('disables an empty Course D and recovers when Mixed is selected', () => {
+    setup();
+    select('D API・語彙');
+    expect(screen.getByRole('status').textContent).toBe('対象: 0問');
+    expect((screen.getByRole('button', { name: '開始' }) as HTMLButtonElement).disabled).toBe(true);
+    click('開始');
+    expect(screen.queryByRole('article')).toBeNull();
+    select('Mixed');
+    expect(screen.getByRole('status').textContent).toBe('対象: 5問');
+    click('開始');
+    expectQuestion(questions[0]!.id);
+  });
+
+  it('starts only the latest READY sequence after C → B and Random → Sequential', () => {
+    setup();
+    select('C Java固有ルール');
+    select('Random');
+    select('B 実行順・状態遷移');
+    select('Sequential');
+    expect(screen.getByRole('status').textContent).toBe('対象: 2問');
+    click('開始');
+    for (const question of questions.filter((question) => question.category === 'B')) {
+      expectQuestion(question.id);
+      click('答えを見る');
+      click('○ 分かった');
+    }
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+  });
+
+  it('freezes the builder sequence through tempo, glossary, rating, Stats, and timer changes; rebuilds on RESET', () => {
+    const actualBuild = sessionSequence.buildQuestionSequence;
+    const build = vi.spyOn(sessionSequence, 'buildQuestionSequence')
+      .mockImplementation((data, settings) => actualBuild(data, settings, () => 0));
+    setup();
+    select('C Java固有ルール');
+    select('Random');
+    const snapshot = [...build.mock.results.at(-1)!.value as string[]];
+    expect(snapshot).toEqual([questions[2]!.id, questions[0]!.id]);
+    const calls = build.mock.calls.length;
+    select('Slow');
+    click('開始');
+    expectQuestion(snapshot[0]!);
+    click('答えを見る');
+    click('○ 分かった');
+    expectQuestion(snapshot[1]!);
+    advance(10000);
+    fireEvent.click(within(screen.getByRole('article')).getByRole('button', { name: 'ローカル変数' }));
+    advance(20000);
+    expectQuestion(snapshot[1]!);
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '閉じる' }));
+    advance(10000);
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(build).toHaveBeenCalledTimes(calls);
+    click('もう一度');
+    expect(build).toHaveBeenCalledTimes(calls + 1);
+    expect(build).toHaveBeenLastCalledWith(questions, { course: 'C', order: 'random' });
+    for (const name of ['C Java固有ルール', 'Random', 'Slow']) {
+      expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
+    }
+    const nextSnapshot = build.mock.results.at(-1)!.value as string[];
+    expect(nextSnapshot).not.toBe(build.mock.results.at(-2)!.value);
+    click('開始');
+    for (const id of nextSnapshot) {
+      expectQuestion(id);
+      click('答えを見る');
+      click('○ 分かった');
+    }
+    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(build).toHaveBeenCalledTimes(calls + 1);
+  });
+});
 
 describe('Drill Timer integration', () => {
   it('automatically reveals, advances, finishes and resets without active timers', () => {

@@ -2,7 +2,7 @@
   font-weight: 600;
 }
 
-.tempo,
+.settings,
 .ratings,
 .timer {
   display: flex;
@@ -11,12 +11,12 @@
   gap: 1rem;
 }
 
-.tempo {
+.settings {
   width: fit-content;
   margin-block: 1rem;
 }
 
-.tempo label {
+.settings label {
   display: flex;
   align-items: center;
   gap: 0.25rem;

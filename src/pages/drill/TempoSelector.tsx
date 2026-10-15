@@ -8,7 +8,7 @@ type TempoSelectorProps = { tempo: Tempo; onChange(tempo: Tempo): void };
 
 export default function TempoSelector({ tempo, onChange }: TempoSelectorProps) {
   return (
-    <fieldset className={styles.tempo}>
+    <fieldset className={styles.settings}>
       <legend>Tempo</legend>
       {(Object.keys(TEMPO_CONFIG) as Tempo[]).map((option) => (
         <label key={option}>

@@ -6,6 +6,8 @@ import type { Question } from '../data/types';
 import { createInitialDrillState, drillReducer } from '../drill/drillReducer';
 import type { DrillMode } from '../drill/drillTypes';
 import { getCurrentQuestionId, getCurrentQuestionNumber, getTotalQuestions, isLastQuestion } from '../drill/drillSelectors';
+import { buildQuestionSequence } from '../drill/sessionSequence';
+import type { SessionSettings } from '../drill/sessionSequence';
 import { getPhaseDurationMs } from '../drill/tempo';
 import type { Tempo } from '../drill/tempo';
 import { useDrillTimer } from '../drill/useDrillTimer';
@@ -14,24 +16,36 @@ import type { StatsRepository } from '../stats/statsRepository';
 import { useStats } from '../stats/useStats';
 import { getWeakQuestionIds } from '../stats/statsSelectors';
 import DrillTimerBar from './drill/DrillTimerBar';
+import CourseSelector from './drill/CourseSelector';
+import OrderSelector from './drill/OrderSelector';
 import RatingButtons from './drill/RatingButtons';
 import TempoSelector from './drill/TempoSelector';
 import styles from './DrillPage.module.css';
 
 export default function DrillPage({ mode = 'all', questions, valid, statsRepository }: { mode?: DrillMode; questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
   const { stats, record, saveFailed } = useStats(statsRepository);
+  const [settings, setSettings] = useState<SessionSettings>({ course: 'mixed', order: 'sequential' });
   const questionsById = useMemo(() => new Map(questions.map((question) => [question.id, question])), [questions]);
   // Only initialization and explicit RESET select a sequence. Rating changes
   // update Stats without removing IDs from the current session snapshot.
   const [state, dispatch] = useReducer(drillReducer, undefined, () => createInitialDrillState(
-    mode === 'review' ? getWeakQuestionIds(stats, questions) : questions.map((question) => question.id),
+    mode === 'review' ? getWeakQuestionIds(stats, questions) : buildQuestionSequence(questions, settings),
   ));
   const total = getTotalQuestions(state);
   const [tempo, setTempo] = useState<Tempo>('normal');
   const [manualPauseKey, setManualPauseKey] = useState<string | null>(null);
   const title = mode === 'review' ? 'Review' : 'Drill';
+  function changeSessionSettings(next: SessionSettings) {
+    if (mode === 'review' || state.phase !== 'ready') return;
+    const questionIds = buildQuestionSequence(questions, next);
+    setSettings(next);
+    dispatch({ type: 'RESET', questionIds });
+  }
   function resetSession() {
-    dispatch(mode === 'review' ? { type: 'RESET', questionIds: getWeakQuestionIds(stats, questions) } : { type: 'RESET' });
+    const questionIds = mode === 'review'
+      ? getWeakQuestionIds(stats, questions)
+      : buildQuestionSequence(questions, settings);
+    dispatch({ type: 'RESET', questionIds });
   }
   const saveError = saveFailed ? <p role="alert">戦績を保存できませんでした。</p> : null;
   const glossary = useGlossary();
@@ -67,6 +81,12 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
       <>
         <h2>{title}</h2>
         {saveError}
+        {mode !== 'review' && (
+          <>
+            <CourseSelector course={settings.course} onChange={(course) => changeSessionSettings({ ...settings, course })} />
+            <OrderSelector order={settings.order} onChange={(order) => changeSessionSettings({ ...settings, order })} />
+          </>
+        )}
         <TempoSelector tempo={tempo} onChange={setTempo} />
         {mode === 'review' ? (
           total > 0 ? <p>弱点候補 {total}問を復習します。</p> : (
@@ -75,7 +95,12 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
               <p>△ 怪しい または × 分からなかった と評価した問題がここに表示されます。</p>
             </>
           )
-        ) : <p>{total > 0 ? `全${total}問を順番に出題します。` : '出題できる問題がありません。'}</p>}
+        ) : (
+          <>
+            <p role="status">対象: {total}問</p>
+            {total === 0 && <p>出題できる問題がありません。</p>}
+          </>
+        )}
         <button className={styles.action} type="button" disabled={total === 0} onClick={() => dispatch({ type: 'START' })}>開始</button>
       </>
     );

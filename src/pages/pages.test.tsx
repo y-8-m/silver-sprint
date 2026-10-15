@@ -203,7 +203,7 @@ describe('Pages and routing', () => {
 describe('Manual Drill', () => {
   it('reveals, advances through all five questions in definition order, finishes, and resets', async () => {
     const { user } = setup('/drill');
-    expect(screen.getByText('全5問を順番に出題します。')).not.toBeNull();
+    expect(screen.getByText('対象: 5問')).not.toBeNull();
     await user.click(screen.getByRole('button', { name: '開始' }));
     const visited: string[] = [];
     for (let number = 1; number <= questions.length; number++) {
@@ -225,7 +225,7 @@ describe('Manual Drill', () => {
     expect(screen.getByText('5 / 5 questions completed')).not.toBeNull();
     expect(screen.queryByRole('article')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'もう一度' }));
-    expect(screen.getByText('全5問を順番に出題します。')).not.toBeNull();
+    expect(screen.getByText('対象: 5問')).not.toBeNull();
     await user.click(screen.getByRole('button', { name: '開始' }));
     expect(screen.getByRole('status').textContent).toBe('Question 1 / 5');
   });

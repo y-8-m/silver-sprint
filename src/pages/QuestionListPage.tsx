@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import InvalidContentNotice from '../components/InvalidContentNotice';
 import QuestionPreview from '../components/QuestionPreview';
+import { CATEGORY_LABELS } from '../data/categoryLabels';
 import type { Question } from '../data/types';
 import styles from './Pages.module.css';
-
-const categories = [['A', '概念理解'], ['B', '実行順・状態遷移'], ['C', 'Java固有ルール'], ['D', 'API・語彙']] as const;
 
 export default function QuestionListPage({ questions, valid }: { questions: Question[]; valid: boolean }) {
   const [category, setCategory] = useState('');
@@ -30,7 +29,7 @@ export default function QuestionListPage({ questions, valid }: { questions: Ques
         <label>Question category
           <select value={category} onChange={(event) => changeCategory(event.target.value)}>
             <option value="">All</option>
-            {categories.map(([value, label]) => <option value={value} key={value}>{value} = {label}</option>)}
+            {Object.entries(CATEGORY_LABELS).map(([value, label]) => <option value={value} key={value}>{value} = {label}</option>)}
           </select>
         </label>
         <label>Topic
