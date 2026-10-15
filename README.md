@@ -212,4 +212,8 @@ Java SE 17の言語仕様に合わせて記述。
 
 `vite.config.ts` の `base` はリポジトリ名に合わせて `/silver-sprint/`。
 `npm run build` が生成する `dist/` を公開対象にできる。
-公開・デプロイ設定は実装していない。自己評価の戦績はlocalStorageへ保存する。
+`.github/workflows/deploy.yml` が `main` へのpushまたはActions画面からの手動実行で、Node.js 24上の `npm ci`・`npm test`・`npm run build` を実行する。
+すべて成功したら `dist/` をGitHub Pagesへ公開する。公開対象は `main` のみ。
+
+初回はリポジトリの **Settings → Pages → Build and deployment → Source** を **GitHub Actions** に設定する。
+自己評価の戦績はlocalStorageへ保存する。
