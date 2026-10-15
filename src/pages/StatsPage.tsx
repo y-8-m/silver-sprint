@@ -87,7 +87,7 @@ export default function StatsPage({ questions, valid, statsRepository }: { quest
         <button className={styles.clear} type="button" onClick={() => {
           if (window.confirm('戦績をすべて削除しますか？')) clear();
         }}>戦績をクリア</button>
-        {clearFailed && <p role="alert">戦績を削除できませんでした。画面上の記録は空にしましたが、再読み込みすると保存済みの記録が戻る可能性があります。</p>}
+        {clearFailed && <p role="alert">一部の保存データを削除できなかった可能性があります。画面上の記録は空にしましたが、再読み込みすると保存済みの記録が戻る可能性があります。</p>}
       </section>
     </>
   );

@@ -73,13 +73,16 @@ export function createLocalStorageStatsRepository(storage?: StatsStorage): Stats
       }
     },
     clear(): boolean {
-      try {
-        if (!storage) return false;
-        storage.removeItem(STATS_STORAGE_KEY);
-        return true;
-      } catch {
-        return false;
+      if (!storage) return false;
+      let success = true;
+      for (const key of [STATS_STORAGE_KEY, STATS_BACKUP_STORAGE_KEY]) {
+        try {
+          storage.removeItem(key);
+        } catch {
+          success = false;
+        }
       }
+      return success;
     },
   };
 }

@@ -96,15 +96,42 @@ describe('localStorage Stats repository', () => {
     expect(repository.save(stats)).toBe(false);
   });
 
-  it('clears only stats and handles removeItem failure', () => {
+  it('clears primary stats and backup while preserving unrelated keys', () => {
     const { repository, storage, data } = setup();
     repository.save(stats);
+    data.set(STATS_BACKUP_STORAGE_KEY, '{ original backup');
     data.set('unrelated', 'keep');
     expect(repository.clear()).toBe(true);
+    expect(storage.removeItem.mock.calls).toEqual([[STATS_STORAGE_KEY], [STATS_BACKUP_STORAGE_KEY]]);
+    expect(data.has(STATS_STORAGE_KEY)).toBe(false);
+    expect(data.has(STATS_BACKUP_STORAGE_KEY)).toBe(false);
     expect(repository.load()).toEqual(createEmptyStats());
     expect(data.get('unrelated')).toBe('keep');
+  });
+
+  it.each([STATS_STORAGE_KEY, STATS_BACKUP_STORAGE_KEY])('still removes the other key when removing %s fails', (failedKey) => {
+    const { repository, storage, data } = setup();
+    repository.save(stats);
+    data.set(STATS_BACKUP_STORAGE_KEY, '{ original backup');
+    data.set('unrelated', 'keep');
+    const original = new Map(data);
+    storage.removeItem.mockImplementation((key) => {
+      if (key === failedKey) throw new Error('Blocked');
+      data.delete(key);
+    });
+    expect(repository.clear()).toBe(false);
+    expect(storage.removeItem.mock.calls).toEqual([[STATS_STORAGE_KEY], [STATS_BACKUP_STORAGE_KEY]]);
+    expect(data.get(failedKey)).toBe(original.get(failedKey));
+    const removedKey = failedKey === STATS_STORAGE_KEY ? STATS_BACKUP_STORAGE_KEY : STATS_STORAGE_KEY;
+    expect(data.has(removedKey)).toBe(false);
+    expect(data.get('unrelated')).toBe('keep');
+  });
+
+  it('attempts both keys and returns false when both removals fail', () => {
+    const { repository, storage } = setup();
     storage.removeItem.mockImplementation(() => { throw new Error('Blocked'); });
     expect(repository.clear()).toBe(false);
+    expect(storage.removeItem.mock.calls).toEqual([[STATS_STORAGE_KEY], [STATS_BACKUP_STORAGE_KEY]]);
   });
 
   it.each(['constructor', 'toString', '__proto__'])('round-trips own ID %s without inherited records', (id) => {

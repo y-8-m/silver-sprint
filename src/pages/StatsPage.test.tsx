@@ -7,7 +7,7 @@ import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
 import { questions } from '../data/questions';
 import type { Question } from '../data/types';
-import { createLocalStorageStatsRepository, STATS_STORAGE_KEY } from '../stats/localStorageStatsRepository';
+import { createLocalStorageStatsRepository, STATS_BACKUP_STORAGE_KEY, STATS_STORAGE_KEY } from '../stats/localStorageStatsRepository';
 import type { Stats } from '../stats/statsTypes';
 
 const seed: Stats = { questions: {
@@ -92,6 +92,7 @@ describe('Stats Page', () => {
 
   it('clears immediately on confirmation and remains empty after remount', () => {
     repository().save(seed);
+    window.localStorage.setItem(STATS_BACKUP_STORAGE_KEY, '{ original backup');
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const view = setup();
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
@@ -101,6 +102,8 @@ describe('Stats Page', () => {
     expect(screen.getByText('弱点候補はありません。')).not.toBeNull();
     expect(screen.getByText('最近の評価はありません。')).not.toBeNull();
     expect(window.localStorage.getItem(STATS_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(STATS_BACKUP_STORAGE_KEY)).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
     view.unmount();
     setup();
     metric('評価済み問題', '0 / 5');
@@ -124,9 +127,26 @@ describe('Stats Page', () => {
     setup();
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
     metric('評価済み問題', '0 / 5');
-    expect(screen.getByRole('alert').textContent).toContain('戦績を削除できませんでした。');
+    expect(screen.getByRole('alert').textContent).toContain('一部の保存データを削除できなかった可能性があります。');
     expect(screen.getByRole('alert').textContent).toContain('再読み込み');
     expect(repository().load()).toEqual(seed);
+  });
+
+  it('reports a remaining backup even when primary stats are successfully cleared', () => {
+    repository().save(seed);
+    window.localStorage.setItem(STATS_BACKUP_STORAGE_KEY, '{ original backup');
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const removeItem = Storage.prototype.removeItem;
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (this: Storage, key: string) {
+      if (key === STATS_BACKUP_STORAGE_KEY) throw new DOMException('Blocked', 'SecurityError');
+      removeItem.call(this, key);
+    });
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
+    metric('評価済み問題', '0 / 5');
+    expect(screen.getByRole('alert').textContent).toContain('一部の保存データを削除できなかった可能性があります。');
+    expect(window.localStorage.getItem(STATS_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(STATS_BACKUP_STORAGE_KEY)).toBe('{ original backup');
   });
 
   it('shows Drill ratings immediately after navigating to Stats in the same session', () => {
