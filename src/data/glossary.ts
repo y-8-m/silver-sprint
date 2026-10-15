@@ -128,7 +128,7 @@ export const glossary = {
   primitiveType: {
     term: 'プリミティブ型',
     category: '型',
-    short: [text('整数・浮動小数点数・真偽値を表す8種類の基本型。変数はプリミティブ値を保持する。')],
+    short: [text('整数系（charを含む）・浮動小数点型・booleanからなる8種類の基本型。変数はプリミティブ値を保持する。')],
     detail: [
       { type: 'text', content: [code('byte'), text('、'), code('short'), text('、'), code('int'), text('、'), code('long'), text('、'), code('char'), text('、'), code('float'), text('、'), code('double'), text('、'), code('boolean'), text('の8種類。')] },
       { type: 'text', content: [code('String'), text('は含まれず、クラス型（参照型）に分類される。参照型の変数が保持するのはオブジェクトへの'), term('reference', '参照'), text('、または'), code('null'), text('であり、プリミティブ値とは区別する。')] },
