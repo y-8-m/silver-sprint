@@ -21,20 +21,43 @@ function isQuestionStats(value: unknown): value is QuestionStats {
     && typeof value.lastAnsweredAt === 'string' && Number.isFinite(Date.parse(value.lastAnsweredAt));
 }
 
+export const STATS_BACKUP_STORAGE_KEY = `${STATS_STORAGE_KEY}:backup`;
+
 export function createLocalStorageStatsRepository(storage?: StatsStorage): StatsRepository {
+  // Anything dropped on load would be overwritten by the next save, so keep the
+  // original text under a separate key. Best effort: a failure here is ignored.
+  function backUp(raw: string): void {
+    try {
+      storage?.setItem(STATS_BACKUP_STORAGE_KEY, raw);
+    } catch {
+      // Storage is unavailable or full; loading must still succeed.
+    }
+  }
+
   return {
     load(): Stats {
       try {
         const raw = storage?.getItem(STATS_STORAGE_KEY);
         if (raw == null) return createEmptyStats();
-        const stored: unknown = JSON.parse(raw);
+        let stored: unknown;
+        try {
+          stored = JSON.parse(raw);
+        } catch {
+          backUp(raw);
+          return createEmptyStats();
+        }
         if (!isObject(stored) || !Object.hasOwn(stored, 'version') || stored.version !== 1
-          || !Object.hasOwn(stored, 'questions') || !isObject(stored.questions)) return createEmptyStats();
+          || !Object.hasOwn(stored, 'questions') || !isObject(stored.questions)) {
+          backUp(raw);
+          return createEmptyStats();
+        }
+        // Valid records survive even when others are corrupt. Only own entries
+        // are loaded; fromEntries also preserves special IDs such as __proto__
+        // as ordinary data properties.
         const entries = Object.entries(stored.questions);
-        if (!entries.every(([, value]) => isQuestionStats(value))) return createEmptyStats();
-        // Only own entries are loaded; fromEntries also preserves special IDs
-        // such as __proto__ as ordinary data properties.
-        return { questions: Object.fromEntries(entries) as Record<string, QuestionStats> };
+        const valid = entries.filter(([, value]) => isQuestionStats(value));
+        if (valid.length !== entries.length) backUp(raw);
+        return { questions: Object.fromEntries(valid) as Record<string, QuestionStats> };
       } catch {
         return createEmptyStats();
       }

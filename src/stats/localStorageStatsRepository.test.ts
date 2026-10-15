@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createBrowserStatsRepository, createLocalStorageStatsRepository, STATS_STORAGE_KEY } from './localStorageStatsRepository';
+import { createBrowserStatsRepository, createLocalStorageStatsRepository, STATS_BACKUP_STORAGE_KEY, STATS_STORAGE_KEY } from './localStorageStatsRepository';
 import { recordRating } from './statsService';
 import { createEmptyStats } from './statsTypes';
 
@@ -51,6 +51,37 @@ describe('localStorage Stats repository', () => {
   ])('validates each question record: %j', (patch) => {
     const raw = JSON.stringify({ version: 1, questions: { q1: { ...stats.questions.q1, ...patch } } });
     expect(setup(raw).repository.load()).toEqual(createEmptyStats());
+  });
+
+  it('keeps valid records and backs up the original when only some records are corrupt', () => {
+    const raw = JSON.stringify({ version: 1, questions: { good: stats.questions.q1, bad: { knownCount: -1 } } });
+    const { repository, data } = setup(raw);
+    expect(Object.keys(repository.load().questions)).toEqual(['good']);
+    expect(data.get(STATS_BACKUP_STORAGE_KEY)).toBe(raw);
+  });
+
+  it.each([
+    '{ invalid json',
+    JSON.stringify({ version: 999, questions: stats.questions }),
+  ])('backs up unreadable or unsupported data before it can be overwritten: %s', (raw) => {
+    const { repository, data } = setup(raw);
+    expect(repository.load()).toEqual(createEmptyStats());
+    expect(data.get(STATS_BACKUP_STORAGE_KEY)).toBe(raw);
+    repository.save(stats);
+    expect(data.get(STATS_BACKUP_STORAGE_KEY)).toBe(raw);
+  });
+
+  it('does not write a backup for valid or missing data', () => {
+    const { repository, storage } = setup(JSON.stringify({ version: 1, questions: stats.questions }));
+    repository.load();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(setup().storage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('still loads when the backup cannot be written', () => {
+    const { repository, storage } = setup('{ invalid json');
+    storage.setItem.mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
+    expect(repository.load()).toEqual(createEmptyStats());
   });
 
   it('returns empty stats when getItem throws', () => {

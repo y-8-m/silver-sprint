@@ -275,4 +275,13 @@ describe('validateContent', () => {
       'glossary["known"].related[0]',
     ]);
   });
+
+  it.each([1, 1.5, 0.5])('accepts timeWeight %s and an omitted timeWeight', (timeWeight) => {
+    expect(validateContent([makeQuestion({ timeWeight }), makeQuestion({ id: 'other' })], knownGlossary).valid).toBe(true);
+  });
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('rejects timeWeight %s', (timeWeight) => {
+    const result = validateContent([makeQuestion(), makeQuestion({ id: 'other', timeWeight })], knownGlossary);
+    expect(result.issues.map((issue) => issue.path)).toEqual(['questions[1].timeWeight']);
+  });
 });

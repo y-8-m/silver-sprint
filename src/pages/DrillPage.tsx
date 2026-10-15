@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import BlockRenderer from '../components/blocks/BlockRenderer';
 import InlineRenderer from '../components/InlineRenderer';
 import InvalidContentNotice from '../components/InvalidContentNotice';
@@ -6,15 +6,16 @@ import type { Question } from '../data/types';
 import { createInitialDrillState, drillReducer } from '../drill/drillReducer';
 import type { DrillMode } from '../drill/drillTypes';
 import { getCurrentQuestionId, getCurrentQuestionNumber, getTotalQuestions, isLastQuestion } from '../drill/drillSelectors';
-import { getPhaseDurationMs, TEMPO_CONFIG } from '../drill/tempo';
+import { getPhaseDurationMs } from '../drill/tempo';
 import type { Tempo } from '../drill/tempo';
 import { useDrillTimer } from '../drill/useDrillTimer';
 import { useGlossary } from '../glossary/GlossaryContext';
 import type { StatsRepository } from '../stats/statsRepository';
-import type { Rating } from '../stats/statsTypes';
-import { getRatingLabel, RATING_LABELS } from '../stats/statsFormatting';
 import { useStats } from '../stats/useStats';
 import { getWeakQuestionIds } from '../stats/statsSelectors';
+import DrillTimerBar from './drill/DrillTimerBar';
+import RatingButtons from './drill/RatingButtons';
+import TempoSelector from './drill/TempoSelector';
 import styles from './DrillPage.module.css';
 
 export default function DrillPage({ mode = 'all', questions, valid, statsRepository }: { mode?: DrillMode; questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
@@ -40,10 +41,15 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   const durationMs = state.phase === 'question' || state.phase === 'answer'
     ? getPhaseDurationMs(tempo, state.phase, question?.timeWeight)
     : 0;
-  const resetKey = JSON.stringify([id, state.currentIndex, state.phase]);
+  const resetKey = `${state.currentIndex}:${id}:${state.phase}`;
   const manualPaused = manualPauseKey === resetKey;
   const glossaryOpen = glossary != null && glossary.selectedGlossaryId !== null;
   useEffect(() => setManualPauseKey(null), [resetKey]);
+  // Rating buttons unmount on advance; move focus to the new question instead of dropping it to <body>.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (state.phase === 'question') headingRef.current?.focus();
+  }, [state.phase, state.currentIndex]);
   const { remainingMs } = useDrillTimer({
     durationMs,
     enabled: active,
@@ -61,15 +67,7 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
       <>
         <h2>{title}</h2>
         {saveError}
-        <fieldset className={styles.tempo}>
-          <legend>Tempo</legend>
-          {(Object.keys(TEMPO_CONFIG) as Tempo[]).map((option) => (
-            <label key={option}>
-              <input type="radio" name="tempo" value={option} checked={tempo === option} onChange={() => setTempo(option)} />
-              {option === 'slow' ? 'Slow' : option === 'normal' ? 'Normal' : 'Fast'}
-            </label>
-          ))}
-        </fieldset>
+        <TempoSelector tempo={tempo} onChange={setTempo} />
         {mode === 'review' ? (
           total > 0 ? <p>弱点候補 {total}問を復習します。</p> : (
             <>
@@ -109,16 +107,15 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
       <h2>{title}</h2>
       {saveError}
       <p className={styles.progress} role="status">Question {getCurrentQuestionNumber(state)} / {total}</p>
-      <div className={styles.timer}>
-        <span>Time: {(remainingMs / 1000).toFixed(1)}s</span>
-        <progress aria-label="残り時間" max={durationMs} value={remainingMs} />
-        {(manualPaused || glossaryOpen) && <span>一時停止中</span>}
-        <button className={styles.action} type="button" onClick={() => setManualPauseKey(manualPaused ? null : resetKey)}>
-          {manualPaused ? '再開' : '一時停止'}
-        </button>
-      </div>
+      <DrillTimerBar
+        remainingMs={remainingMs}
+        durationMs={durationMs}
+        manualPaused={manualPaused}
+        glossaryOpen={glossaryOpen}
+        onTogglePause={() => setManualPauseKey(manualPaused ? null : resetKey)}
+      />
       <article data-question-id={question.id}>
-        <h3>[{question.category}] {question.topic}</h3>
+        <h3 ref={headingRef} tabIndex={-1}>[{question.category}] {question.topic}</h3>
         <section className={styles.area}>
           <h4>Question</h4>
           {question.prompt.map((block, index) => <BlockRenderer block={block} key={index} />)}
@@ -137,15 +134,10 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
         )}
       </article>
       {state.phase === 'answer' && (
-        <fieldset className={styles.ratings}>
-          <legend>理解度</legend>
-          {(Object.keys(RATING_LABELS) as Rating[]).map((rating) => (
-            <button className={styles.action} type="button" key={rating} onClick={() => {
-              record(question.id, rating);
-              dispatch({ type: 'NEXT' });
-            }}>{getRatingLabel(rating)}</button>
-          ))}
-        </fieldset>
+        <RatingButtons onRate={(rating) => {
+          record(question.id, rating);
+          dispatch({ type: 'NEXT' });
+        }} />
       )}
       {state.phase === 'question' ? (
         <button className={styles.action} type="button" onClick={() => dispatch({ type: 'REVEAL_ANSWER' })}>答えを見る</button>

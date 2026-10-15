@@ -35,14 +35,19 @@ function getRatedQuestionStats(stats: Stats, questions: Question[]): RatedQuesti
 }
 
 export function getStatsSummary(stats: Stats, questions: Question[]): StatsSummary {
-  return getRatedQuestionStats(stats, questions).reduce<StatsSummary>((summary, view) => ({
-    ratedQuestionCount: summary.ratedQuestionCount + 1,
-    unratedQuestionCount: summary.unratedQuestionCount - 1,
-    knownCount: summary.knownCount + view.stats.knownCount,
-    unsureCount: summary.unsureCount + view.stats.unsureCount,
-    unknownCount: summary.unknownCount + view.stats.unknownCount,
-    totalRatings: summary.totalRatings + view.stats.knownCount + view.stats.unsureCount + view.stats.unknownCount,
-  }), { ratedQuestionCount: 0, unratedQuestionCount: questions.length, knownCount: 0, unsureCount: 0, unknownCount: 0, totalRatings: 0 });
+  const rated = getRatedQuestionStats(stats, questions);
+  const sum = (pick: (view: RatedQuestionStatsView) => number) => rated.reduce((total, view) => total + pick(view), 0);
+  const knownCount = sum((view) => view.stats.knownCount);
+  const unsureCount = sum((view) => view.stats.unsureCount);
+  const unknownCount = sum((view) => view.stats.unknownCount);
+  return {
+    ratedQuestionCount: rated.length,
+    unratedQuestionCount: questions.length - rated.length,
+    knownCount,
+    unsureCount,
+    unknownCount,
+    totalRatings: knownCount + unsureCount + unknownCount,
+  };
 }
 
 // Material order; these IDs can also supply a future Review Drill sequence.

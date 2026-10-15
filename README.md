@@ -48,7 +48,26 @@ src/
 │  ├ drillTypes.ts
 │  ├ drillReducer.ts
 │  ├ drillSelectors.ts
+│  ├ tempo.ts
+│  ├ useDrillTimer.ts
 │  └ *.test.ts
+├ stats/
+│  ├ statsTypes.ts
+│  ├ statsService.ts
+│  ├ statsSelectors.ts
+│  ├ statsFormatting.ts
+│  ├ statsRepository.ts
+│  ├ localStorageStatsRepository.ts
+│  ├ useStats.ts
+│  └ *.test.ts
+├ pages/
+│  ├ HomePage.tsx
+│  ├ QuestionListPage.tsx
+│  ├ GlossaryPage.tsx
+│  ├ DrillPage.tsx（Drill / Review共用）
+│  ├ drill/（TempoSelector・DrillTimerBar・RatingButtons）
+│  ├ StatsPage.tsx
+│  └ *.module.css / *.test.tsx
 ├ data/
 │  ├ types.ts
 │  ├ helpers.ts
@@ -94,7 +113,7 @@ validatorは網羅性を型チェックするため、未対応のBlockを追加
 READYでTempoを選び、Question / Answerの時間切れでも自動進行する。
 `src/drill/tempo.ts` に基準時間を集約している（Slow: 10秒 / 10秒、Normal: 6秒 / 7秒、Fast: 3秒 / 4秒）。
 両phaseとも基準時間 × `Question.timeWeight`（未指定は1）を使用する。
-値域のvalidator検証はまだないため、計算結果が非正数・非有限の場合だけ基準時間へ戻す。
+`timeWeight` は有限で0より大きい数であることをvalidatorが検証する。それでも計算結果が非正数・非有限になった場合は基準時間へ戻す。
 
 `useDrillTimer` はdeadlineと現在時刻の差で残時間を約100msごとに更新し、期限通知を1期間に1回だけ行う。
 DrillPageが通知を `TIMER_EXPIRED` としてdispatchし、reducerがQuestionならAnswer、Answerなら次問またはFinishedへ進める。
@@ -107,6 +126,7 @@ hookとDrill連携の時間経過テストにはfake timersを使用している
 ANSWERには「○ 分かった」「△ 怪しい」「× 分からなかった」の自己評価を表示する。
 評価時だけ問題ごとのknown / unsure / unknown件数と、最後の評価・ISO日時を保存して `NEXT` へ進む。
 「次へ」「完了」やTimer expiryは未評価として進み、戦績を変更しない。
+問題が切り替わると、評価ボタンが消えてもキーボード操作を続けられるよう、問題見出しへフォーカスを移す。
 
 `src/stats/statsService.ts` の `recordRating` は日時を引数で受け取り、元Statsを変更せず集計するpure function。
 `useStats` がDrill進行とは別にStatsを保持し、初期化時の読み込みと評価イベント時の保存を担当する。
@@ -115,7 +135,8 @@ keyは `silverSprint:v1:stats`、保存schemaは `{ version: 1, questions: ... }
 各recordには `knownCount`, `unsureCount`, `unknownCount`, `lastRating`, `lastAnsweredAt` を保存する。
 UIラベルや派生合計は保存しない。
 
-読み込み時はversion・object形状・各recordのカウントと評価・日時を検証し、破損・非対応version・読み込み失敗は空Statsへ戻す。
+読み込み時はversion・object形状・各recordのカウントと評価・日時を検証する。不正なrecordだけを除外し、有効なrecordは残す。形状が壊れている・JSONが不正・非対応versionの場合は空Statsとして扱う。
+除外や空扱いが発生したときは、上書きされる前に元の文字列を `silverSprint:v1:stats:backup` へ退避する（最後の1件のみ・best effort）。読み込み自体が失敗した場合も空Statsで続行する。
 継承プロパティを問題IDとして扱わず、`constructor` / `toString` / `__proto__` も自前のIDとして安全に扱う。
 Storage getterや保存が失敗してもDrillとメモリ上の集計は続け、「戦績を保存できませんでした。」を表示する。
 次の保存が成功すればメモリ上の累積Statsを保存し、表示を解除する。
@@ -178,7 +199,7 @@ Java SE 17の言語仕様に合わせて記述。
 ## 次工程で確認する点
 
 - A〜Dの分類に沿ったコース内容・問題の網羅性は今後整備する。
-- `timeWeight` は両phaseの基準時間への倍率。サンプルの複合問題は `1.5`。validatorで数値範囲はまだ検証していない。
+- `timeWeight` は両phaseの基準時間への倍率。サンプルの複合問題は `1.5`。validatorで有限かつ0より大きいことを検証する（上限は未定義）。
 - 空の配列・空文字列は今回の検証対象外。描画を実装するときに必要な制約を決める。
 - Block・Inline・stepsにはIDがないため、静的Rendererのkeyは配列indexを使用している。将来、要素の並べ替えや要素ごとの状態を持つ場合はkeyの方針を検討する。
 - 比較表のcell不足は型だけでは禁止できない。validatorで検出し、Appは正常な教材だけをプレビューする。個別Rendererを他の画面で使うときも検証済み教材を渡す。

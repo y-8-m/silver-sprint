@@ -7,7 +7,7 @@ import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
 import { questions } from '../data/questions';
 import type { Question } from '../data/types';
-import { createLocalStorageStatsRepository, STATS_STORAGE_KEY } from '../stats/localStorageStatsRepository';
+import { createLocalStorageStatsRepository, STATS_BACKUP_STORAGE_KEY, STATS_STORAGE_KEY } from '../stats/localStorageStatsRepository';
 
 // Native modal behavior is also checked in the browser.
 const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
@@ -145,6 +145,20 @@ describe('Drill Rating integration', () => {
     click('答えを見る');
     click('○ 分かった');
     expect(repository().load().questions[questions[0]!.id]?.knownCount).toBe(1);
+    expect(window.localStorage.getItem(STATS_BACKUP_STORAGE_KEY)).toBe('{ broken json');
+  });
+
+  it('moves focus to the new question heading after rating and after automatic advance', () => {
+    setup();
+    click('開始');
+    click('答えを見る');
+    screen.getByRole('button', { name: '○ 分かった' }).focus();
+    click('○ 分かった');
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
+    advance(6000);
+    advance(7000);
+    expect(screen.getByRole('status').textContent).toBe('Question 3 / 5');
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
   });
 });
 afterAll(() => {

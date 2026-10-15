@@ -132,6 +132,12 @@ export function validateContent(
       });
     }
     questionIds.add(question.id);
+    if (question.timeWeight !== undefined && !(Number.isFinite(question.timeWeight) && question.timeWeight > 0)) {
+      issues.push({
+        path: `${path}.timeWeight`,
+        message: `timeWeight must be a finite number greater than 0, but was ${question.timeWeight}.`,
+      });
+    }
     validateBlocks(question.prompt, `${path}.prompt`, glossary, issues);
     validateInline(question.answer, `${path}.answer`, glossary, issues);
     validateBlocks(question.explanation, `${path}.explanation`, glossary, issues);
