@@ -152,7 +152,7 @@ describe('Stats Page', () => {
   it('shows Drill ratings immediately after navigating to Stats in the same session', () => {
     setup('/drill');
     fireEvent.click(screen.getByRole('button', { name: '開始' }));
-    act(() => vi.advanceTimersByTime(6000));
+    act(() => vi.advanceTimersByTime(10000));
     fireEvent.click(screen.getByRole('button', { name: '△ 怪しい' }));
     fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }));
     metric('評価済み問題', `1 / ${questions.length}`);

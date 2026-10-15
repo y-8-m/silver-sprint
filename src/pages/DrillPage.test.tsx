@@ -49,12 +49,12 @@ describe('Drill Rating integration', () => {
     expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
     click('開始');
     expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
-    advance(6000);
+    advance(10000);
     expect(screen.getByRole('group', { name: '理解度' })).not.toBeNull();
     click('一時停止');
     click(label);
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
-    expect(timer().value).toBe(6000);
+    expect(timer().value).toBe(10000);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
     expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
     const saved = repository().load().questions[questions[0]!.id];
@@ -98,12 +98,12 @@ describe('Drill Rating integration', () => {
     click('開始');
     click('答えを見る');
     if (mode === 'manual') click('次へ');
-    else advance(7000);
+    else advance(10000);
     expect(screen.getByRole('status').textContent).toBe('2 / 2 問');
     expect(repo.load()).toEqual(previous);
     click('答えを見る');
     if (mode === 'manual') click('完了');
-    else advance(7000);
+    else advance(10000);
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(repo.load()).toEqual(previous);
     expect(save).not.toHaveBeenCalled();
@@ -156,8 +156,8 @@ describe('Drill Rating integration', () => {
     screen.getByRole('button', { name: '○ 分かった' }).focus();
     click('○ 分かった');
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
-    advance(6000);
-    advance(7000);
+    advance(10000);
+    advance(10000);
     expect(screen.getByRole('status').textContent).toBe(`3 / ${questions.length} 問`);
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
   });
@@ -290,12 +290,12 @@ describe('Drill Course / Order integration', () => {
     click('答えを見る');
     click('○ 分かった');
     expectQuestion(snapshot[1]!);
-    advance(10000);
+    advance(15000);
     fireEvent.click(within(screen.getByRole('article')).getByRole('button', { name: 'ローカル変数' }));
     advance(20000);
     expectQuestion(snapshot[1]!);
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '閉じる' }));
-    advance(10000);
+    advance(15000);
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(build).toHaveBeenCalledTimes(calls);
     click('もう一度');
@@ -324,11 +324,11 @@ describe('Drill Timer integration', () => {
     expect(screen.queryByRole('progressbar')).toBeNull();
     click('開始');
     expect(screen.queryByRole('radio')).toBeNull();
-    expect(screen.getByText('残り時間: 6.0秒')).not.toBeNull();
-    advance(6000);
+    expect(screen.getByText('残り時間: 10.0秒')).not.toBeNull();
+    advance(10000);
     expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
-    expect(screen.getByText('残り時間: 7.0秒')).not.toBeNull();
-    advance(7000);
+    expect(screen.getByText('残り時間: 10.0秒')).not.toBeNull();
+    advance(10000);
     expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
     for (let number = 2; number <= questions.length; number++) {
@@ -346,7 +346,7 @@ describe('Drill Timer integration', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it.each([['ゆっくり', 10000, 10000], ['速い', 3000, 4000]] as const)('uses selected %s tempo and retains it on reset', (tempo, questionMs, answerMs) => {
+  it.each([['ゆっくり', 15000, 15000], ['速い', 6000, 7000]] as const)('uses selected %s tempo and retains it on reset', (tempo, questionMs, answerMs) => {
     setup([questions[0]!]);
     fireEvent.click(screen.getByRole('radio', { name: tempo }));
     click('開始');
@@ -361,13 +361,13 @@ describe('Drill Timer integration', () => {
   it('applies timeWeight to both phases', () => {
     setup([{ ...questions[0]!, timeWeight: 2 }]);
     click('開始');
-    expect(timer().max).toBe(12000);
+    expect(timer().max).toBe(20000);
     advance(5900);
     expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
-    advance(6100);
+    advance(14100);
     expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
-    expect(timer().value).toBe(14000);
-    advance(13900);
+    expect(timer().value).toBe(20000);
+    advance(19900);
     expect(screen.queryByRole('heading', { name: 'ドリル完了' })).toBeNull();
     advance(100);
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
@@ -378,12 +378,12 @@ describe('Drill Timer integration', () => {
     click('開始');
     advance(2100);
     click('一時停止');
-    expect(timer().value).toBe(3900);
+    expect(timer().value).toBe(7900);
     advance(20000);
-    expect(timer().value).toBe(3900);
+    expect(timer().value).toBe(7900);
     expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
     click('再開');
-    advance(3800);
+    advance(7800);
     expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
     advance(100);
     expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
@@ -395,15 +395,15 @@ describe('Drill Timer integration', () => {
     advance(2000);
     click('一時停止');
     click('答えを見る');
-    expect(timer().value).toBe(7000);
+    expect(timer().value).toBe(10000);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
     advance(1000);
-    expect(timer().value).toBe(6000);
+    expect(timer().value).toBe(9000);
     click('一時停止');
     click('次へ');
-    expect(timer().value).toBe(6000);
+    expect(timer().value).toBe(10000);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
-    advance(6000);
+    advance(10000);
     expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
   });
 
@@ -414,13 +414,13 @@ describe('Drill Timer integration', () => {
     advance(2800);
     fireEvent.click(within(screen.getByRole('article')).getByRole('button', { name: 'ローカル変数' }));
     const dialog = screen.getByRole('dialog', { name: 'ローカル変数' });
-    expect(timer().value).toBe(4200);
+    expect(timer().value).toBe(7200);
     advance(20000);
-    expect(timer().value).toBe(4200);
+    expect(timer().value).toBe(7200);
     expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
     fireEvent.click(within(dialog).getByRole('button', { name: '閉じる' }));
-    expect(timer().value).toBe(4200);
-    advance(4100);
+    expect(timer().value).toBe(7200);
+    advance(7100);
     expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
     advance(100);
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
@@ -435,9 +435,9 @@ describe('Drill Timer integration', () => {
     fireEvent.click(within(screen.getByRole('article')).getByRole('button', { name: 'ローカル変数' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '閉じる' }));
     advance(20000);
-    expect(timer().value).toBe(6000);
+    expect(timer().value).toBe(9000);
     click('再開');
-    advance(6000);
+    advance(9000);
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
   });
 
@@ -449,7 +449,7 @@ describe('Drill Timer integration', () => {
     fireEvent.pointerEnter(trigger, { pointerType: 'mouse' });
     fireEvent.focus(trigger);
     expect(screen.getByRole('tooltip')).not.toBeNull();
-    advance(7000);
+    advance(10000);
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
   });
 

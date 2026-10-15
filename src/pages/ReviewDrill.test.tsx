@@ -110,7 +110,7 @@ describe('Review Drill', () => {
     for (let index = 0; index < 2; index++) {
       click('答えを見る');
       if (method === 'manual next') click(index === 0 ? '次へ' : '完了');
-      else advance(7000);
+      else advance(10000);
     }
     expect(screen.getByRole('heading', { name: '復習完了' })).not.toBeNull();
     expect(repo().load()).toEqual(original);
@@ -121,7 +121,7 @@ describe('Review Drill', () => {
   });
 
   it.each([
-    ['ゆっくり', 20000, 20000], ['標準', 12000, 14000], ['速い', 6000, 8000],
+    ['ゆっくり', 30000, 30000], ['標準', 20000, 20000], ['速い', 12000, 14000],
   ] as const)('reuses %s timing and timeWeight on both phases', (tempo, questionMs, answerMs) => {
     const data = [{ ...questions[0]!, timeWeight: 2 }];
     setup(recordRating(createEmptyStats(), firstId, 'unknown', answeredAt), '/review', data);
@@ -145,11 +145,11 @@ describe('Review Drill', () => {
     click('一時停止');
     advance(20000);
     expectQuestion(firstId, 1, 2);
-    expect((screen.getByRole('progressbar') as HTMLProgressElement).value).toBe(5000);
+    expect((screen.getByRole('progressbar') as HTMLProgressElement).value).toBe(8000);
     click('○ 分かった');
     expectQuestion(thirdId, 2, 2);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
-    advance(6000);
+    advance(10000);
     expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
   });
 
