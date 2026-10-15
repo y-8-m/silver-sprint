@@ -49,6 +49,23 @@ describe('drillReducer', () => {
     expect(reset.questionIds).toBe(state.questionIds);
   });
 
+  it.each<DrillPhase>(['ready', 'question', 'answer', 'finished'])('replaces the sequence on RESET from %s with a copied array', (phase) => {
+    const state = stateAt(phase, 2);
+    const questionIds = ['q3', 'q1'];
+    const reset = drillReducer(state, { type: 'RESET', questionIds });
+    expect(reset).toEqual({ phase: 'ready', currentIndex: 0, questionIds: ['q3', 'q1'] });
+    expect(reset.questionIds).not.toBe(questionIds);
+    questionIds.push('q2');
+    expect(reset.questionIds).toEqual(['q3', 'q1']);
+    expect(state).toEqual(stateAt(phase, 2));
+  });
+
+  it('accepts an empty RESET sequence and cannot start it', () => {
+    const reset = drillReducer(stateAt('finished', 2), { type: 'RESET', questionIds: [] });
+    expect(reset).toEqual({ phase: 'ready', currentIndex: 0, questionIds: [] });
+    expect(drillReducer(reset, { type: 'START' })).toBe(reset);
+  });
+
   it.each<{ phase: DrillPhase; action: DrillAction }>([
     { phase: 'ready', action: { type: 'REVEAL_ANSWER' } },
     { phase: 'ready', action: { type: 'NEXT' } },

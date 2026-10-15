@@ -4,6 +4,7 @@ import InlineRenderer from '../components/InlineRenderer';
 import InvalidContentNotice from '../components/InvalidContentNotice';
 import type { Question } from '../data/types';
 import { createInitialDrillState, drillReducer } from '../drill/drillReducer';
+import type { DrillMode } from '../drill/drillTypes';
 import { getCurrentQuestionId, getCurrentQuestionNumber, getTotalQuestions, isLastQuestion } from '../drill/drillSelectors';
 import { getPhaseDurationMs, TEMPO_CONFIG } from '../drill/tempo';
 import type { Tempo } from '../drill/tempo';
@@ -13,16 +14,24 @@ import type { StatsRepository } from '../stats/statsRepository';
 import type { Rating } from '../stats/statsTypes';
 import { getRatingLabel, RATING_LABELS } from '../stats/statsFormatting';
 import { useStats } from '../stats/useStats';
+import { getWeakQuestionIds } from '../stats/statsSelectors';
 import styles from './DrillPage.module.css';
 
-export default function DrillPage({ questions, valid, statsRepository }: { questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
-  const questionIds = useMemo(() => questions.map((question) => question.id), [questions]);
+export default function DrillPage({ mode = 'all', questions, valid, statsRepository }: { mode?: DrillMode; questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
+  const { stats, record, saveFailed } = useStats(statsRepository);
   const questionsById = useMemo(() => new Map(questions.map((question) => [question.id, question])), [questions]);
-  const [state, dispatch] = useReducer(drillReducer, questionIds, createInitialDrillState);
+  // Only initialization and explicit RESET select a sequence. Rating changes
+  // update Stats without removing IDs from the current session snapshot.
+  const [state, dispatch] = useReducer(drillReducer, undefined, () => createInitialDrillState(
+    mode === 'review' ? getWeakQuestionIds(stats, questions) : questions.map((question) => question.id),
+  ));
   const total = getTotalQuestions(state);
   const [tempo, setTempo] = useState<Tempo>('normal');
   const [manualPauseKey, setManualPauseKey] = useState<string | null>(null);
-  const { record, saveFailed } = useStats(statsRepository);
+  const title = mode === 'review' ? 'Review' : 'Drill';
+  function resetSession() {
+    dispatch(mode === 'review' ? { type: 'RESET', questionIds: getWeakQuestionIds(stats, questions) } : { type: 'RESET' });
+  }
   const saveError = saveFailed ? <p role="alert">戦績を保存できませんでした。</p> : null;
   const glossary = useGlossary();
   const id = getCurrentQuestionId(state);
@@ -44,13 +53,13 @@ export default function DrillPage({ questions, valid, statsRepository }: { quest
   });
 
   if (!valid) {
-    return <InvalidContentNotice title="Drill" action="開始" />;
+    return <InvalidContentNotice title={title} action="開始" />;
   }
 
   if (state.phase === 'ready') {
     return (
       <>
-        <h2>Drill</h2>
+        <h2>{title}</h2>
         {saveError}
         <fieldset className={styles.tempo}>
           <legend>Tempo</legend>
@@ -61,7 +70,14 @@ export default function DrillPage({ questions, valid, statsRepository }: { quest
             </label>
           ))}
         </fieldset>
-        <p>{total > 0 ? `全${total}問を順番に出題します。` : '出題できる問題がありません。'}</p>
+        {mode === 'review' ? (
+          total > 0 ? <p>弱点候補 {total}問を復習します。</p> : (
+            <>
+              <p>現在、復習対象の問題はありません。</p>
+              <p>△ 怪しい または × 分からなかった と評価した問題がここに表示されます。</p>
+            </>
+          )
+        ) : <p>{total > 0 ? `全${total}問を順番に出題します。` : '出題できる問題がありません。'}</p>}
         <button className={styles.action} type="button" disabled={total === 0} onClick={() => dispatch({ type: 'START' })}>開始</button>
       </>
     );
@@ -70,10 +86,10 @@ export default function DrillPage({ questions, valid, statsRepository }: { quest
   if (state.phase === 'finished') {
     return (
       <section className={styles.finished}>
-        <h2>Drill Complete</h2>
+        <h2>{title} Complete</h2>
         {saveError}
         <p>{total} / {total} questions completed</p>
-        <button className={styles.action} type="button" onClick={() => dispatch({ type: 'RESET' })}>もう一度</button>
+        <button className={styles.action} type="button" onClick={resetSession}>{mode === 'review' ? '弱点を再取得' : 'もう一度'}</button>
       </section>
     );
   }
@@ -81,16 +97,16 @@ export default function DrillPage({ questions, valid, statsRepository }: { quest
   if (!question) {
     return (
       <>
-        <h2>Drill</h2>
+        <h2>{title}</h2>
         <p role="alert">問題データを取得できません。</p>
-        <button className={styles.action} type="button" onClick={() => dispatch({ type: 'RESET' })}>最初に戻る</button>
+        <button className={styles.action} type="button" onClick={resetSession}>最初に戻る</button>
       </>
     );
   }
 
   return (
     <>
-      <h2>Drill</h2>
+      <h2>{title}</h2>
       {saveError}
       <p className={styles.progress} role="status">Question {getCurrentQuestionNumber(state)} / {total}</p>
       <div className={styles.timer}>

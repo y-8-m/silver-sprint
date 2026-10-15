@@ -24,7 +24,12 @@ export function drillReducer(state: DrillState, action: DrillAction): DrillState
       if (state.phase === 'answer') return drillReducer(state, { type: 'NEXT' });
       return state;
     case 'RESET':
-      return { ...state, phase: 'ready', currentIndex: 0 };
+      return {
+        ...state,
+        phase: 'ready',
+        currentIndex: 0,
+        questionIds: action.questionIds === undefined ? state.questionIds : [...action.questionIds],
+      };
     default: {
       const unhandled: never = action;
       return unhandled;

@@ -1,4 +1,5 @@
 import InvalidContentNotice from '../components/InvalidContentNotice';
+import { Link } from 'react-router-dom';
 import type { Question } from '../data/types';
 import { formatAnsweredAt, getRatingLabel } from '../stats/statsFormatting';
 import type { StatsRepository } from '../stats/statsRepository';
@@ -33,6 +34,7 @@ export default function StatsPage({ questions, valid, statsRepository }: { quest
 
       <section className={styles.section} aria-labelledby="stats-weak">
         <h3 id="stats-weak">Weak Questions</h3>
+        {weak.length > 0 && <p><Link to="/review">弱点を復習</Link></p>}
         {weak.length === 0 ? <p>弱点候補はありません。</p> : (
           <ul className={styles.list}>
             {weak.map((view) => (

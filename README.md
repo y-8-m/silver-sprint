@@ -122,7 +122,10 @@ Storage getterや保存が失敗してもDrillとメモリ上の集計は続け�
 永続保存に失敗した分はページを離れると失われる。複数タブの同時更新の競合解決やschema migrationは未実装。
 `#/stats` は現在の教材だけを対象に集計・未評価件数・弱点候補・最近の最終評価5件・全問題の戦績を表示する。
 orphan記録は集計から除外し、弱点は最終評価がunsure / unknownの問題を教材順で抽出する。
-確認付きの戦績クリアに対応し、DrillとStatsは各mount時に同じlocalStorageを読み込む。復習モード・コース選択は未実装。
+確認付きの戦績クリアに対応し、Drill・Review・Statsは各mount時に同じlocalStorageを読み込む。
+`#/review` は既存Drillをreview modeで使用し、弱点IDを教材順のsession snapshotとして保持する。
+評価でStatsが変わっても進行中のsequenceは固定し、完了後の「弱点を再取得」で最新Statsから再構成する。
+弱点がない場合は開始不可。StatsのWeak QuestionsからもReviewへ移動できる。コース選択は未実装。
 
 ## 静的Renderer
 

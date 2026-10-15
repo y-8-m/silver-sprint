@@ -23,7 +23,8 @@ export default function AppRoutes({ questions, glossary }: AppRoutesProps) {
           <Route index element={<HomePage questionCount={questions.length} glossaryCount={Object.keys(glossary).length} validation={validation} />} />
           <Route path="questions" element={<QuestionListPage questions={questions} valid={validation.valid} />} />
           <Route path="glossary" element={<GlossaryPage glossary={glossary} valid={validation.valid} />} />
-          <Route path="drill" element={<DrillPage questions={questions} valid={validation.valid} />} />
+          <Route path="drill" element={<DrillPage key="all" mode="all" questions={questions} valid={validation.valid} />} />
+          <Route path="review" element={<DrillPage key="review" mode="review" questions={questions} valid={validation.valid} />} />
           <Route path="stats" element={<StatsPage questions={questions} valid={validation.valid} />} />
           <Route path="*" element={<><h2>ページが見つかりません。</h2><Link to="/">Homeへ戻る</Link></>} />
         </Route>

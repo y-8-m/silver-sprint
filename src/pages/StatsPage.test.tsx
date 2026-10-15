@@ -59,7 +59,7 @@ describe('Stats Page', () => {
     expect(table.getAllByText('評価なし')).toHaveLength(2);
     expect(within(rows[1]!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['C', '0', '0', '2', '× 分からなかった', '2026/10/15 10:00:00']);
     expect(table.getByText('2026/10/15 10:00:00').getAttribute('datetime')).toBe('2026-10-15T01:00:00Z');
-    expect(screen.getByRole('navigation').textContent).toBe('HomeQuestionsGlossaryDrillStats');
+    expect(screen.getByRole('navigation').textContent).toBe('HomeQuestionsGlossaryDrillReviewStats');
     expect(within(screen.getByRole('navigation')).getByRole('link', { name: 'Stats' }).getAttribute('aria-current')).toBe('page');
   });
 

@@ -1,4 +1,5 @@
 export type DrillPhase = 'ready' | 'question' | 'answer' | 'finished';
+export type DrillMode = 'all' | 'review';
 
 export type DrillState = {
   phase: DrillPhase;
@@ -11,4 +12,4 @@ export type DrillAction =
   | { type: 'REVEAL_ANSWER' }
   | { type: 'NEXT' }
   | { type: 'TIMER_EXPIRED' }
-  | { type: 'RESET' };
+  | { type: 'RESET'; questionIds?: string[] };
