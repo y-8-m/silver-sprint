@@ -169,16 +169,16 @@ describe('Review Drill', () => {
   it('keeps normal Drill as the complete material sequence despite weak stats', () => {
     const original = seedStats();
     setup(original, '/drill');
-    expect(screen.getByText('対象: 5問')).not.toBeNull();
+    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
     click('開始');
     for (let index = 0; index < questions.length; index++) {
-      expectQuestion(questions[index]!.id, index + 1, 5);
+      expectQuestion(questions[index]!.id, index + 1, questions.length);
       click('答えを見る');
       click(index === questions.length - 1 ? '完了' : '次へ');
     }
     expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
     click('もう一度');
-    expect(screen.getByText('対象: 5問')).not.toBeNull();
+    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
     expect(repo().load()).toEqual(original);
   });
 
@@ -187,9 +187,9 @@ describe('Review Drill', () => {
     click('開始');
     const nav = within(screen.getByRole('navigation'));
     fireEvent.click(nav.getByRole('link', { name: 'Drill' }));
-    expect(screen.getByText('対象: 5問')).not.toBeNull();
+    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
     click('開始');
-    expectQuestion(firstId, 1, 5);
+    expectQuestion(firstId, 1, questions.length);
     fireEvent.click(nav.getByRole('link', { name: 'Review' }));
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
     expect(nav.getByRole('link', { name: 'Review' }).getAttribute('aria-current')).toBe('page');

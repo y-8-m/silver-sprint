@@ -108,14 +108,14 @@ describe('BlockRenderer', () => {
 });
 
 describe('Content preview', () => {
-  it('renders all five questions with their category, topic, prompt, answer, and explanation', () => {
+  it('renders all questions with their category, topic, prompt, answer, and explanation', () => {
     const html = renderToStaticMarkup(
       <>{questions.map((question) => <QuestionPreview question={question} key={question.id} />)}</>,
     );
-    expect(html.match(/<article\b/g)).toHaveLength(5);
-    expect(html.match(/<h3>Question<\/h3>/g)).toHaveLength(5);
-    expect(html.match(/<h3>Answer<\/h3>/g)).toHaveLength(5);
-    expect(html.match(/<h3>Explanation<\/h3>/g)).toHaveLength(5);
+    expect(html.match(/<article\b/g)).toHaveLength(questions.length);
+    expect(html.match(/<h3>Question<\/h3>/g)).toHaveLength(questions.length);
+    expect(html.match(/<h3>Answer<\/h3>/g)).toHaveLength(questions.length);
+    expect(html.match(/<h3>Explanation<\/h3>/g)).toHaveLength(questions.length);
     questions.forEach((question) => {
       expect(html).toContain(`data-question-id="${question.id}"`);
       expect(html).toContain(`<h2>[${question.category}] ${question.topic}</h2>`);

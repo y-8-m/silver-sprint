@@ -40,10 +40,27 @@ const knownGlossary = {
 const missingReference = term('missing', '存在しない用語');
 
 describe('validateContent', () => {
-  it('accepts all five sample questions and six glossary entries', () => {
-    expect(questions).toHaveLength(5);
-    expect(Object.keys(glossary)).toHaveLength(6);
+  it('accepts all sixteen questions and nine glossary entries', () => {
+    expect(questions).toHaveLength(16);
+    expect(Object.keys(glossary)).toHaveLength(9);
     expect(validateContent(questions, glossary)).toEqual({ valid: true, issues: [] });
+  });
+
+  it('integrates the twelve-question variables unit with its intended category distribution', () => {
+    const unitIds = new Set([
+      'primitive-reference-kind', 'primitive-types', 'byte-constant-assignment',
+      'float-literal-assignment', 'local-variable-initialization', 'definite-assignment-if',
+      'definite-assignment-if-else', 'block-scope', 'for-variable-scope',
+      'declaration-initializer-scope', 'primitive-copy', 'final-local-variable',
+    ]);
+    const unit = questions.filter((question) => unitIds.has(question.id));
+    expect(unit).toHaveLength(12);
+    expect(Object.fromEntries(['A', 'B', 'C', 'D'].map((category) => [
+      category, unit.filter((question) => question.category === category).length,
+    ]))).toEqual({ A: 1, B: 3, C: 7, D: 1 });
+    expect(questions.filter((question) => !unitIds.has(question.id)).map((question) => question.id)).toEqual([
+      'post-increment-output', 'inheritance-multiplicity', 'reference-variable-value', 'constructor-call-chain',
+    ]);
   });
 
   it('detects a duplicate Question ID', () => {

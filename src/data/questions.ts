@@ -1,4 +1,5 @@
 import { code, term, text } from './helpers';
+import { additionalVariableQuestions } from './questions/variables';
 import type { Question } from './types';
 
 export const questions = [
@@ -6,8 +7,11 @@ export const questions = [
     id: 'local-variable-initialization',
     category: 'C',
     topic: 'ローカル変数の初期化',
-    prompt: [{ type: 'text', content: [text('初期値を指定せず宣言したローカル変数は、自動的に初期化される？')] }],
-    answer: [text('されない。値を読み出す前に代入が必要。')],
+    prompt: [
+      { type: 'text', content: [text('次のコードをメソッド内に書くとコンパイルできる？')] },
+      { type: 'code', language: 'java', code: 'int x;\nSystem.out.println(x);' },
+    ],
+    answer: [text('コンパイルエラー。読み出す前に代入が必要。')],
     explanation: [
       {
         type: 'text',
@@ -15,7 +19,11 @@ export const questions = [
           term('localVariable', 'ローカル変数'),
           text('には'),
           term('defaultValue', 'デフォルト値'),
-          text('が設定されない。値が確実に代入される前に読み出すとコンパイルエラーになる。'),
+          text('が設定されない。使用地点で'),
+          term('definiteAssignment', 'definitely assigned（確実に代入済み）'),
+          text('であることがコンパイル時に必要。このコードは宣言のみで、'),
+          code('println(x)'),
+          text('までに代入がないためコンパイルエラーになる。実行時に0や不定の値が出力されるわけではない。'),
         ],
       },
     ],
@@ -232,4 +240,5 @@ class Main {
       },
     ],
   },
+  ...additionalVariableQuestions,
 ] satisfies Question[];

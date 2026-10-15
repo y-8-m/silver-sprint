@@ -53,7 +53,7 @@ describe('Drill Rating integration', () => {
     expect(screen.getByRole('group', { name: '理解度' })).not.toBeNull();
     click('一時停止');
     click(label);
-    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
     expect(timer().value).toBe(6000);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
     expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
@@ -158,7 +158,7 @@ describe('Drill Rating integration', () => {
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
     advance(6000);
     advance(7000);
-    expect(screen.getByRole('status').textContent).toBe('Question 3 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 3 / ${questions.length}`);
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
   });
 });
@@ -202,12 +202,12 @@ describe('Drill Course / Order integration', () => {
     expect(screen.queryByRole('group', { name: 'Order' })).toBeNull();
   }
 
-  it('defaults to Mixed / Sequential / Normal and visits all five questions in material order', () => {
+  it('defaults to Mixed / Sequential / Normal and visits all questions in material order', () => {
     setup();
     for (const name of ['Mixed', 'Sequential', 'Normal']) {
       expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
     }
-    expect(screen.getByRole('status').textContent).toBe('対象: 5問');
+    expect(screen.getByRole('status').textContent).toBe(`対象: ${questions.length}問`);
     click('開始');
     for (const question of questions) {
       expectQuestion(question.id);
@@ -219,7 +219,7 @@ describe('Drill Course / Order integration', () => {
   });
 
   it.each([
-    ['A 概念理解', 'A'], ['B 実行順・状態遷移', 'B'], ['C Java固有ルール', 'C'],
+    ['A 概念理解', 'A'], ['B 実行順・状態遷移', 'B'], ['C Java固有ルール', 'C'], ['D API・語彙', 'D'],
   ] as const)('updates the count and visits only %s, regardless of saved ratings', (label, category) => {
     const repo = createLocalStorageStatsRepository(window.localStorage);
     const matching = questions.filter((question) => question.category === category);
@@ -244,14 +244,15 @@ describe('Drill Course / Order integration', () => {
   });
 
   it('disables an empty Course D and recovers when Mixed is selected', () => {
-    setup();
+    const data = questions.filter((question) => question.category !== 'D');
+    setup(data);
     select('D API・語彙');
     expect(screen.getByRole('status').textContent).toBe('対象: 0問');
     expect((screen.getByRole('button', { name: '開始' }) as HTMLButtonElement).disabled).toBe(true);
     click('開始');
     expect(screen.queryByRole('article')).toBeNull();
     select('Mixed');
-    expect(screen.getByRole('status').textContent).toBe('対象: 5問');
+    expect(screen.getByRole('status').textContent).toBe(`対象: ${data.length}問`);
     click('開始');
     expectQuestion(questions[0]!.id);
   });
@@ -262,7 +263,7 @@ describe('Drill Course / Order integration', () => {
     select('Random');
     select('B 実行順・状態遷移');
     select('Sequential');
-    expect(screen.getByRole('status').textContent).toBe('対象: 2問');
+    expect(screen.getByRole('status').textContent).toBe(`対象: ${questions.filter((question) => question.category === 'B').length}問`);
     click('開始');
     for (const question of questions.filter((question) => question.category === 'B')) {
       expectQuestion(question.id);
@@ -273,10 +274,11 @@ describe('Drill Course / Order integration', () => {
   });
 
   it('freezes the builder sequence through tempo, glossary, rating, Stats, and timer changes; rebuilds on RESET', () => {
+    const data = questions.slice(0, 3);
     const actualBuild = sessionSequence.buildQuestionSequence;
     const build = vi.spyOn(sessionSequence, 'buildQuestionSequence')
       .mockImplementation((data, settings) => actualBuild(data, settings, () => 0));
-    setup();
+    setup(data);
     select('C Java固有ルール');
     select('Random');
     const snapshot = [...build.mock.results.at(-1)!.value as string[]];
@@ -298,7 +300,7 @@ describe('Drill Course / Order integration', () => {
     expect(build).toHaveBeenCalledTimes(calls);
     click('もう一度');
     expect(build).toHaveBeenCalledTimes(calls + 1);
-    expect(build).toHaveBeenLastCalledWith(questions, { course: 'C', order: 'random' });
+    expect(build).toHaveBeenLastCalledWith(data, { course: 'C', order: 'random' });
     for (const name of ['C Java固有ルール', 'Random', 'Slow']) {
       expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
     }
@@ -328,8 +330,8 @@ describe('Drill Timer integration', () => {
     expect(screen.getByText('Time: 7.0s')).not.toBeNull();
     advance(7000);
     expect(screen.queryByRole('heading', { name: 'Answer' })).toBeNull();
-    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
-    for (let number = 2; number <= 5; number++) {
+    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
+    for (let number = 2; number <= questions.length; number++) {
       advance(timer().max);
       expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
       advance(timer().max);
@@ -415,13 +417,13 @@ describe('Drill Timer integration', () => {
     expect(timer().value).toBe(4200);
     advance(20000);
     expect(timer().value).toBe(4200);
-    expect(screen.getByRole('status').textContent).toBe('Question 1 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 1 / ${questions.length}`);
     fireEvent.click(within(dialog).getByRole('button', { name: '閉じる' }));
     expect(timer().value).toBe(4200);
     advance(4100);
-    expect(screen.getByRole('status').textContent).toBe('Question 1 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 1 / ${questions.length}`);
     advance(100);
-    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
   });
 
   it('keeps manual pause after closing glossary detail', () => {
@@ -436,7 +438,7 @@ describe('Drill Timer integration', () => {
     expect(timer().value).toBe(6000);
     click('再開');
     advance(6000);
-    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
   });
 
   it('does not pause or extend time on short tooltip hover or focus', () => {
@@ -448,7 +450,7 @@ describe('Drill Timer integration', () => {
     fireEvent.focus(trigger);
     expect(screen.getByRole('tooltip')).not.toBeNull();
     advance(7000);
-    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
   });
 
   it('cleans up the timer when navigating away', () => {

@@ -43,20 +43,20 @@ describe('Stats Page', () => {
   it('renders material-based summary and the complete table including unrated questions', () => {
     repository().save(seed);
     setup();
-    metric('評価済み問題', '3 / 5');
-    metric('未評価問題', '2');
+    metric('評価済み問題', `3 / ${questions.length}`);
+    metric('未評価問題', String(questions.length - 3));
     metric('評価回数', '6');
     metric('○ 分かった', '3');
     metric('△ 怪しい', '1');
     metric('× 分からなかった', '2');
     const table = within(screen.getByRole('table', { name: '問題別Stats（教材順）' }));
     const rows = table.getAllByRole('row');
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(questions.length + 1);
     for (let index = 0; index < questions.length; index++) {
       const row = within(rows[index + 1]!);
       expect(row.getByRole('rowheader').textContent).toBe(questions[index]!.topic);
     }
-    expect(table.getAllByText('評価なし')).toHaveLength(2);
+    expect(table.getAllByText('評価なし')).toHaveLength(questions.length - 3);
     expect(within(rows[1]!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['C', '0', '0', '2', '× 分からなかった', '2026/10/15 10:00:00']);
     expect(table.getByText('2026/10/15 10:00:00').getAttribute('datetime')).toBe('2026-10-15T01:00:00Z');
     expect(screen.getByRole('navigation').textContent).toBe('HomeQuestionsGlossaryDrillReviewStats');
@@ -81,13 +81,13 @@ describe('Stats Page', () => {
 
   it('shows empty states while still listing every question', () => {
     setup();
-    metric('評価済み問題', '0 / 5');
-    metric('未評価問題', '5');
+    metric('評価済み問題', `0 / ${questions.length}`);
+    metric('未評価問題', String(questions.length));
     metric('評価回数', '0');
     expect(screen.getByText('まだ評価記録がありません。')).not.toBeNull();
     expect(screen.getByText('弱点候補はありません。')).not.toBeNull();
     expect(screen.getByText('最近の評価はありません。')).not.toBeNull();
-    expect(screen.getAllByText('評価なし')).toHaveLength(5);
+    expect(screen.getAllByText('評価なし')).toHaveLength(questions.length);
   });
 
   it('clears immediately on confirmation and remains empty after remount', () => {
@@ -97,7 +97,7 @@ describe('Stats Page', () => {
     const view = setup();
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
     expect(confirm).toHaveBeenCalledWith('戦績をすべて削除しますか？');
-    metric('評価済み問題', '0 / 5');
+    metric('評価済み問題', `0 / ${questions.length}`);
     metric('評価回数', '0');
     expect(screen.getByText('弱点候補はありません。')).not.toBeNull();
     expect(screen.getByText('最近の評価はありません。')).not.toBeNull();
@@ -106,7 +106,7 @@ describe('Stats Page', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     view.unmount();
     setup();
-    metric('評価済み問題', '0 / 5');
+    metric('評価済み問題', `0 / ${questions.length}`);
   });
 
   it('leaves memory and storage unchanged when confirmation is cancelled', () => {
@@ -115,7 +115,7 @@ describe('Stats Page', () => {
     const remove = vi.spyOn(Storage.prototype, 'removeItem');
     setup();
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
-    metric('評価済み問題', '3 / 5');
+    metric('評価済み問題', `3 / ${questions.length}`);
     expect(repository().load()).toEqual(seed);
     expect(remove).not.toHaveBeenCalled();
   });
@@ -126,7 +126,7 @@ describe('Stats Page', () => {
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new DOMException('Blocked', 'SecurityError'); });
     setup();
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
-    metric('評価済み問題', '0 / 5');
+    metric('評価済み問題', `0 / ${questions.length}`);
     expect(screen.getByRole('alert').textContent).toContain('一部の保存データを削除できなかった可能性があります。');
     expect(screen.getByRole('alert').textContent).toContain('再読み込み');
     expect(repository().load()).toEqual(seed);
@@ -143,7 +143,7 @@ describe('Stats Page', () => {
     });
     setup();
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
-    metric('評価済み問題', '0 / 5');
+    metric('評価済み問題', `0 / ${questions.length}`);
     expect(screen.getByRole('alert').textContent).toContain('一部の保存データを削除できなかった可能性があります。');
     expect(window.localStorage.getItem(STATS_STORAGE_KEY)).toBeNull();
     expect(window.localStorage.getItem(STATS_BACKUP_STORAGE_KEY)).toBe('{ original backup');
@@ -155,7 +155,7 @@ describe('Stats Page', () => {
     act(() => vi.advanceTimersByTime(6000));
     fireEvent.click(screen.getByRole('button', { name: '△ 怪しい' }));
     fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Stats' }));
-    metric('評価済み問題', '1 / 5');
+    metric('評価済み問題', `1 / ${questions.length}`);
     metric('△ 怪しい', '1');
     expect(within(screen.getByRole('region', { name: 'Weak Questions' })).getByText(`[C] ${questions[0]!.topic}`)).not.toBeNull();
     expect(within(screen.getByRole('region', { name: 'Recent' })).getByText(/[C].*ローカル変数の初期化/)).not.toBeNull();
@@ -184,7 +184,7 @@ describe('Stats Page', () => {
   it('handles corrupt storage with the empty state', () => {
     window.localStorage.setItem(STATS_STORAGE_KEY, '{ broken');
     setup();
-    metric('評価済み問題', '0 / 5');
+    metric('評価済み問題', `0 / ${questions.length}`);
     expect(screen.getByText('まだ評価記録がありません。')).not.toBeNull();
   });
 });

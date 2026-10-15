@@ -47,17 +47,17 @@ function setup(path = '/', data: { questions?: Question[]; glossary?: GlossaryDi
 describe('Pages and routing', () => {
   it('navigates Home, Questions, Glossary, and Drill with a current-page indicator', async () => {
     const { user } = setup();
-    expect(screen.getByText('Questions: 5')).not.toBeNull();
-    expect(screen.getByText('Glossary entries: 6')).not.toBeNull();
+    expect(screen.getByText(`Questions: ${questions.length}`)).not.toBeNull();
+    expect(screen.getByText(`Glossary entries: ${Object.keys(glossary).length}`)).not.toBeNull();
     expect(screen.getByText('Data validation: OK')).not.toBeNull();
     expect(screen.queryByRole('article')).toBeNull();
     const nav = within(screen.getByRole('navigation'));
     expect(nav.getByRole('link', { name: 'Home' }).getAttribute('aria-current')).toBe('page');
     await user.click(nav.getByRole('link', { name: 'Questions' }));
-    expect(screen.getAllByRole('article')).toHaveLength(5);
+    expect(screen.getAllByRole('article')).toHaveLength(questions.length);
     expect(nav.getByRole('link', { name: 'Questions' }).getAttribute('aria-current')).toBe('page');
     await user.click(nav.getByRole('link', { name: 'Glossary' }));
-    expect(screen.getAllByRole('article')).toHaveLength(6);
+    expect(screen.getAllByRole('article')).toHaveLength(Object.keys(glossary).length);
     expect(nav.getByRole('link', { name: 'Glossary' }).getAttribute('aria-current')).toBe('page');
     await user.click(nav.getByRole('link', { name: 'Drill' }));
     expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
@@ -68,18 +68,18 @@ describe('Pages and routing', () => {
 
   it('uses category and topic as AND filters and reports an empty result', async () => {
     const { user } = setup('/questions');
-    expect(screen.getByRole('status').textContent).toBe('5 / 5 questions');
+    expect(screen.getByRole('status').textContent).toBe(`${questions.length} / ${questions.length} questions`);
     await user.selectOptions(screen.getByLabelText('Question category'), 'B');
-    expect(screen.getByRole('status').textContent).toBe('2 / 5 questions');
+    expect(screen.getByRole('status').textContent).toBe(`${questions.filter((question) => question.category === 'B').length} / ${questions.length} questions`);
     expect(screen.getAllByRole('article').every((article) => article.textContent?.includes('[B]'))).toBe(true);
     await user.selectOptions(screen.getByLabelText('Topic'), '後置インクリメント');
-    expect(screen.getByRole('status').textContent).toBe('1 / 5 questions');
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} questions`);
     expect(screen.getByRole('article').getAttribute('data-question-id')).toBe('post-increment-output');
     await user.selectOptions(screen.getByLabelText('Topic'), 'ローカル変数の初期化');
-    expect(screen.getByRole('status').textContent).toBe('0 / 5 questions');
+    expect(screen.getByRole('status').textContent).toBe(`0 / ${questions.length} questions`);
     expect(screen.getByText('条件に一致する問題はありません。')).not.toBeNull();
     await user.selectOptions(screen.getByLabelText('Question category'), '');
-    expect(screen.getByRole('status').textContent).toBe('1 / 5 questions');
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} questions`);
   });
 
   it('clears a selected topic that cannot match the newly chosen category', async () => {
@@ -87,7 +87,7 @@ describe('Pages and routing', () => {
     await user.selectOptions(screen.getByLabelText('Topic'), '後置インクリメント');
     await user.selectOptions(screen.getByLabelText('Question category'), 'A');
     expect((screen.getByLabelText('Topic') as HTMLSelectElement).value).toBe('');
-    expect(screen.getByRole('status').textContent).not.toBe('0 / 5 questions');
+    expect(screen.getByRole('status').textContent).not.toBe(`0 / ${questions.length} questions`);
     await user.selectOptions(screen.getByLabelText('Topic'), '後置インクリメント');
     await user.selectOptions(screen.getByLabelText('Question category'), 'B');
     expect((screen.getByLabelText('Topic') as HTMLSelectElement).value).toBe('後置インクリメント');
@@ -128,7 +128,7 @@ describe('Pages and routing', () => {
     const nav = within(screen.getByRole('navigation'));
     await user.click(nav.getByRole('link', { name: 'Glossary' }));
     await user.click(nav.getByRole('link', { name: 'Questions' }));
-    expect(screen.getByRole('status').textContent).toBe('5 / 5 questions');
+    expect(screen.getByRole('status').textContent).toBe(`${questions.length} / ${questions.length} questions`);
   });
 
   it.each([
@@ -139,7 +139,7 @@ describe('Pages and routing', () => {
   ])('searches glossary %s', async (_field, query, id) => {
     const { user } = setup('/glossary');
     await user.type(screen.getByLabelText('用語検索'), query);
-    expect(screen.getByRole('status').textContent).toBe('1 / 6 glossary entries');
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${Object.keys(glossary).length} glossary entries`);
     expect(screen.getByRole('article').getAttribute('data-glossary-entry-id')).toBe(id);
   });
 
@@ -156,15 +156,15 @@ describe('Pages and routing', () => {
   it('combines glossary search and category and displays the empty state', async () => {
     const { user } = setup('/glossary');
     await user.selectOptions(screen.getByLabelText('Glossary category'), '変数');
-    expect(screen.getByRole('status').textContent).toBe('2 / 6 glossary entries');
+    expect(screen.getByRole('status').textContent).toBe(`${Object.values(glossary).filter((entry) => entry.category === '変数').length} / ${Object.keys(glossary).length} glossary entries`);
     await user.type(screen.getByLabelText('用語検索'), 'ローカル');
-    expect(screen.getByRole('status').textContent).toBe('1 / 6 glossary entries');
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${Object.keys(glossary).length} glossary entries`);
     await user.selectOptions(screen.getByLabelText('Glossary category'), '演算子');
     expect(screen.getByText('条件に一致する用語はありません。')).not.toBeNull();
     await user.clear(screen.getByLabelText('用語検索'));
-    expect(screen.getByRole('status').textContent).toBe('1 / 6 glossary entries');
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${Object.keys(glossary).length} glossary entries`);
     await user.type(screen.getByLabelText('用語検索'), '存在しない検索文字列');
-    expect(screen.getByRole('status').textContent).toBe('0 / 6 glossary entries');
+    expect(screen.getByRole('status').textContent).toBe(`0 / ${Object.keys(glossary).length} glossary entries`);
     expect(screen.getByText('条件に一致する用語はありません。')).not.toBeNull();
   });
 
@@ -195,19 +195,19 @@ describe('Pages and routing', () => {
     expect(screen.queryByRole('article')).toBeNull();
     await user.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Home' }));
     expect(screen.getByText('Data validation: ERROR')).not.toBeNull();
-    expect(screen.getByText('questions[5].id')).not.toBeNull();
+    expect(screen.getByText(`questions[${questions.length}].id`)).not.toBeNull();
     expect(screen.getByText(/Question ID .* is duplicated/)).not.toBeNull();
   });
 });
 
 describe('Manual Drill', () => {
-  it('reveals, advances through all five questions in definition order, finishes, and resets', async () => {
+  it('reveals, advances through all questions in definition order, finishes, and resets', async () => {
     const { user } = setup('/drill');
-    expect(screen.getByText('対象: 5問')).not.toBeNull();
+    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
     await user.click(screen.getByRole('button', { name: '開始' }));
     const visited: string[] = [];
     for (let number = 1; number <= questions.length; number++) {
-      expect(screen.getByRole('status').textContent).toBe(`Question ${number} / 5`);
+      expect(screen.getByRole('status').textContent).toBe(`Question ${number} / ${questions.length}`);
       expect(screen.queryByRole('heading', { name: 'Answer' })).toBeNull();
       expect(screen.queryByRole('heading', { name: 'Explanation' })).toBeNull();
       const card = screen.getByRole('article');
@@ -222,12 +222,12 @@ describe('Manual Drill', () => {
     }
     expect(visited).toEqual(questions.map((question) => question.id));
     expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
-    expect(screen.getByText('5 / 5 questions completed')).not.toBeNull();
+    expect(screen.getByText(`${questions.length} / ${questions.length} questions completed`)).not.toBeNull();
     expect(screen.queryByRole('article')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'もう一度' }));
-    expect(screen.getByText('対象: 5問')).not.toBeNull();
+    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
     await user.click(screen.getByRole('button', { name: '開始' }));
-    expect(screen.getByRole('status').textContent).toBe('Question 1 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 1 / ${questions.length}`);
   });
 
   it('uses the existing glossary tooltip and dialog without changing the Drill phase', async () => {
@@ -240,10 +240,10 @@ describe('Manual Drill', () => {
     await user.click(trigger);
     const dialog = screen.getByRole('dialog', { name: 'ローカル変数' });
     await user.click(within(dialog).getByRole('button', { name: '閉じる' }));
-    expect(screen.getByRole('status').textContent).toBe('Question 1 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 1 / ${questions.length}`);
     expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
     await user.click(screen.getByRole('button', { name: '次へ' }));
-    expect(screen.getByRole('status').textContent).toBe('Question 2 / 5');
+    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
   });
 
   it('disables starting an empty session', () => {

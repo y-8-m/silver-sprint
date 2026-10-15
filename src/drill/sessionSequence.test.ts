@@ -23,7 +23,7 @@ describe('buildQuestionSequence', () => {
   });
 
   it('returns an empty sequence for a course with no matching questions', () => {
-    expect(buildQuestionSequence(questions, { course: 'D', order: 'sequential' })).toEqual([]);
+    expect(buildQuestionSequence(material.filter((question) => question.category !== 'D'), { course: 'D', order: 'sequential' })).toEqual([]);
   });
 
   it('does not use the random source for Sequential', () => {
