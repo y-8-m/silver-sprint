@@ -121,7 +121,7 @@ describe('Glossary interactions', () => {
     expect(trigger.getAttribute('data-glossary-id')).toBe('alpha');
     await user.click(trigger);
     const dialog = screen.getByRole('dialog', { name: '用語A' });
-    expect(dialog.textContent).toContain('Category: テスト');
+    expect(dialog.textContent).toContain('カテゴリ: テスト');
     expect(dialog.textContent).toContain('Aの短い説明');
     expect(dialog.textContent).toContain('Aの詳細');
     expect(document.activeElement).toBe(within(dialog).getByRole('heading', { name: '用語A' }));

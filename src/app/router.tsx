@@ -26,7 +26,7 @@ export default function AppRoutes({ questions, glossary }: AppRoutesProps) {
           <Route path="drill" element={<DrillPage key="all" mode="all" questions={questions} valid={validation.valid} />} />
           <Route path="review" element={<DrillPage key="review" mode="review" questions={questions} valid={validation.valid} />} />
           <Route path="stats" element={<StatsPage questions={questions} valid={validation.valid} />} />
-          <Route path="*" element={<><h2>ページが見つかりません。</h2><Link to="/">Homeへ戻る</Link></>} />
+          <Route path="*" element={<><h2>ページが見つかりません。</h2><Link to="/">ホームへ戻る</Link></>} />
         </Route>
       </Routes>
       <GlossaryDetailDialog />

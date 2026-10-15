@@ -42,7 +42,7 @@ export default function GlossaryDetailDialog() {
       {entry && (
         <>
           <h2 id={titleId} ref={titleRef} tabIndex={-1}>{entry.term}</h2>
-          <p>Category: {entry.category}</p>
+          <p>カテゴリ: {entry.category}</p>
           <p id={shortId}><PlainInlineRenderer nodes={entry.short} /></p>
           {entry.detail?.map((block, index) => <BlockRenderer block={block} key={index} />)}
           {!!entry.related?.length && (

@@ -6,10 +6,10 @@ type HomePageProps = { questionCount: number; glossaryCount: number; validation:
 export default function HomePage({ questionCount, glossaryCount, validation }: HomePageProps) {
   return (
     <>
-      <h2>Home</h2>
-      <p>Questions: {questionCount}</p>
-      <p>Glossary entries: {glossaryCount}</p>
-      <p>Data validation: {validation.valid ? 'OK' : 'ERROR'}</p>
+      <h2>ホーム</h2>
+      <p>問題数: {questionCount}</p>
+      <p>用語数: {glossaryCount}</p>
+      <p>教材データ: {validation.valid ? 'OK' : 'エラー'}</p>
       {!validation.valid && (
         <ul className={styles.issues}>
           {validation.issues.map((issue, index) => (

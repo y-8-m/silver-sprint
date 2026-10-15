@@ -9,7 +9,7 @@ import styles from './StatsPage.module.css';
 
 export default function StatsPage({ questions, valid, statsRepository }: { questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
   const { stats, clear, clearFailed } = useStats(statsRepository);
-  if (!valid) return <InvalidContentNotice title="Stats" action="表示" />;
+  if (!valid) return <InvalidContentNotice title="戦績" action="表示" />;
 
   const summary = getStatsSummary(stats, questions);
   const views = getQuestionStatsViews(stats, questions);
@@ -18,9 +18,9 @@ export default function StatsPage({ questions, valid, statsRepository }: { quest
 
   return (
     <>
-      <h2>Stats</h2>
+      <h2>戦績</h2>
       <section className={styles.section} aria-labelledby="stats-summary">
-        <h3 id="stats-summary">Summary</h3>
+        <h3 id="stats-summary">概要</h3>
         {summary.ratedQuestionCount === 0 && <p>まだ評価記録がありません。</p>}
         <dl className={styles.summary}>
           <div><dt>評価済み問題</dt><dd>{summary.ratedQuestionCount} / {questions.length}</dd></div>
@@ -33,7 +33,7 @@ export default function StatsPage({ questions, valid, statsRepository }: { quest
       </section>
 
       <section className={styles.section} aria-labelledby="stats-weak">
-        <h3 id="stats-weak">Weak Questions</h3>
+        <h3 id="stats-weak">弱点問題</h3>
         {weak.length > 0 && <p><Link to="/review">弱点を復習</Link></p>}
         {weak.length === 0 ? <p>弱点候補はありません。</p> : (
           <ul className={styles.list}>
@@ -45,7 +45,7 @@ export default function StatsPage({ questions, valid, statsRepository }: { quest
       </section>
 
       <section className={styles.section} aria-labelledby="stats-recent">
-        <h3 id="stats-recent">Recent</h3>
+        <h3 id="stats-recent">最近の評価</h3>
         <p>問題ごとの最終評価（新しい順、最大5件）・日時は日本時間</p>
         {recent.length === 0 ? <p>最近の評価はありません。</p> : (
           <ol className={styles.list}>
@@ -60,12 +60,12 @@ export default function StatsPage({ questions, valid, statsRepository }: { quest
       </section>
 
       <section className={styles.section} aria-labelledby="stats-questions">
-        <h3 id="stats-questions">Question Stats</h3>
-        <div className={styles.tableScroll} role="region" aria-label="問題別Statsの横スクロール" tabIndex={0}>
+        <h3 id="stats-questions">問題別戦績</h3>
+        <div className={styles.tableScroll} role="region" aria-label="問題別戦績の横スクロール" tabIndex={0}>
           <table>
-            <caption>問題別Stats（教材順）</caption>
+            <caption>問題別戦績（教材順）</caption>
             <thead><tr>
-              <th scope="col">Category</th><th scope="col">Topic</th>
+              <th scope="col">カテゴリ</th><th scope="col">トピック</th>
               <th scope="col">{getRatingLabel('known')}</th><th scope="col">{getRatingLabel('unsure')}</th><th scope="col">{getRatingLabel('unknown')}</th>
               <th scope="col">最後の評価</th><th scope="col">最終評価日時（日本時間）</th>
             </tr></thead>

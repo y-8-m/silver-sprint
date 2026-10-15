@@ -11,14 +11,14 @@ export default function Layout() {
     <div className={styles.app}>
       <header>
         <h1>Silver Sprint</h1>
-        <p>Java Silver SE 17 Drill</p>
+        <p>Java Silver SE 17 対策ドリル</p>
         <nav aria-label="メインナビゲーション" className={styles.navigation}>
-          <NavLink to="/" end>Home</NavLink>
-          <NavLink to="/questions">Questions</NavLink>
-          <NavLink to="/glossary">Glossary</NavLink>
-          <NavLink to="/drill">Drill</NavLink>
-          <NavLink to="/review">Review</NavLink>
-          <NavLink to="/stats">Stats</NavLink>
+          <NavLink to="/" end>ホーム</NavLink>
+          <NavLink to="/questions">問題一覧</NavLink>
+          <NavLink to="/glossary">用語集</NavLink>
+          <NavLink to="/drill">ドリル</NavLink>
+          <NavLink to="/review">復習</NavLink>
+          <NavLink to="/stats">戦績</NavLink>
         </nav>
       </header>
       <main><Outlet /></main>

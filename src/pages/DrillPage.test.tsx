@@ -53,7 +53,7 @@ describe('Drill Rating integration', () => {
     expect(screen.getByRole('group', { name: '理解度' })).not.toBeNull();
     click('一時停止');
     click(label);
-    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
+    expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
     expect(timer().value).toBe(6000);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
     expect(screen.queryByRole('group', { name: '理解度' })).toBeNull();
@@ -73,7 +73,7 @@ describe('Drill Rating integration', () => {
     click('開始');
     click('答えを見る');
     click('○ 分かった');
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     // jsdom queues a zero-delay storage event when setItem succeeds.
     advance(0);
     expect(vi.getTimerCount()).toBe(0);
@@ -99,12 +99,12 @@ describe('Drill Rating integration', () => {
     click('答えを見る');
     if (mode === 'manual') click('次へ');
     else advance(7000);
-    expect(screen.getByRole('status').textContent).toBe('Question 2 / 2');
+    expect(screen.getByRole('status').textContent).toBe('2 / 2 問');
     expect(repo.load()).toEqual(previous);
     click('答えを見る');
     if (mode === 'manual') click('完了');
     else advance(7000);
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(repo.load()).toEqual(previous);
     expect(save).not.toHaveBeenCalled();
   });
@@ -128,7 +128,7 @@ describe('Drill Rating integration', () => {
     click('開始');
     click('答えを見る');
     click('○ 分かった');
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(screen.getByRole('alert').textContent).toBe('戦績を保存できませんでした。');
     click('もう一度');
     save.mockRestore();
@@ -158,7 +158,7 @@ describe('Drill Rating integration', () => {
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
     advance(6000);
     advance(7000);
-    expect(screen.getByRole('status').textContent).toBe(`Question 3 / ${questions.length}`);
+    expect(screen.getByRole('status').textContent).toBe(`3 / ${questions.length} 問`);
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3 }));
   });
 });
@@ -198,13 +198,13 @@ describe('Drill Course / Order integration', () => {
 
   function expectQuestion(id: string) {
     expect(screen.getByRole('article').getAttribute('data-question-id')).toBe(id);
-    expect(screen.queryByRole('group', { name: 'Course' })).toBeNull();
-    expect(screen.queryByRole('group', { name: 'Order' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'コース' })).toBeNull();
+    expect(screen.queryByRole('group', { name: '出題順' })).toBeNull();
   }
 
   it('defaults to Mixed / Sequential / Normal and visits all questions in material order', () => {
     setup();
-    for (const name of ['Mixed', 'Sequential', 'Normal']) {
+    for (const name of ['全カテゴリ', '順番', '標準']) {
       expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
     }
     expect(screen.getByRole('status').textContent).toBe(`対象: ${questions.length}問`);
@@ -214,7 +214,7 @@ describe('Drill Course / Order integration', () => {
       click('答えを見る');
       click('○ 分かった');
     }
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(screen.queryByRole('radio')).toBeNull();
   });
 
@@ -236,7 +236,7 @@ describe('Drill Course / Order integration', () => {
       click('答えを見る');
       click('× 分からなかった');
     }
-    expect(screen.getByText(`${matching.length} / ${matching.length} questions completed`)).not.toBeNull();
+    expect(screen.getByText(`${matching.length} / ${matching.length} 問完了`)).not.toBeNull();
     click('もう一度');
     expect((screen.getByRole('radio', { name: label }) as HTMLInputElement).checked).toBe(true);
     click('開始');
@@ -251,7 +251,7 @@ describe('Drill Course / Order integration', () => {
     expect((screen.getByRole('button', { name: '開始' }) as HTMLButtonElement).disabled).toBe(true);
     click('開始');
     expect(screen.queryByRole('article')).toBeNull();
-    select('Mixed');
+    select('全カテゴリ');
     expect(screen.getByRole('status').textContent).toBe(`対象: ${data.length}問`);
     click('開始');
     expectQuestion(questions[0]!.id);
@@ -260,9 +260,9 @@ describe('Drill Course / Order integration', () => {
   it('starts only the latest READY sequence after C → B and Random → Sequential', () => {
     setup();
     select('C Java固有ルール');
-    select('Random');
+    select('ランダム');
     select('B 実行順・状態遷移');
-    select('Sequential');
+    select('順番');
     expect(screen.getByRole('status').textContent).toBe(`対象: ${questions.filter((question) => question.category === 'B').length}問`);
     click('開始');
     for (const question of questions.filter((question) => question.category === 'B')) {
@@ -270,7 +270,7 @@ describe('Drill Course / Order integration', () => {
       click('答えを見る');
       click('○ 分かった');
     }
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
   });
 
   it('freezes the builder sequence through tempo, glossary, rating, Stats, and timer changes; rebuilds on RESET', () => {
@@ -280,11 +280,11 @@ describe('Drill Course / Order integration', () => {
       .mockImplementation((data, settings) => actualBuild(data, settings, () => 0));
     setup(data);
     select('C Java固有ルール');
-    select('Random');
+    select('ランダム');
     const snapshot = [...build.mock.results.at(-1)!.value as string[]];
     expect(snapshot).toEqual([questions[2]!.id, questions[0]!.id]);
     const calls = build.mock.calls.length;
-    select('Slow');
+    select('ゆっくり');
     click('開始');
     expectQuestion(snapshot[0]!);
     click('答えを見る');
@@ -296,12 +296,12 @@ describe('Drill Course / Order integration', () => {
     expectQuestion(snapshot[1]!);
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '閉じる' }));
     advance(10000);
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(build).toHaveBeenCalledTimes(calls);
     click('もう一度');
     expect(build).toHaveBeenCalledTimes(calls + 1);
     expect(build).toHaveBeenLastCalledWith(data, { course: 'C', order: 'random' });
-    for (const name of ['C Java固有ルール', 'Random', 'Slow']) {
+    for (const name of ['C Java固有ルール', 'ランダム', 'ゆっくり']) {
       expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
     }
     const nextSnapshot = build.mock.results.at(-1)!.value as string[];
@@ -312,7 +312,7 @@ describe('Drill Course / Order integration', () => {
       click('答えを見る');
       click('○ 分かった');
     }
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(build).toHaveBeenCalledTimes(calls + 1);
   });
 });
@@ -320,33 +320,33 @@ describe('Drill Course / Order integration', () => {
 describe('Drill Timer integration', () => {
   it('automatically reveals, advances, finishes and resets without active timers', () => {
     setup();
-    expect((screen.getByRole('radio', { name: 'Normal' }) as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole('radio', { name: '標準' }) as HTMLInputElement).checked).toBe(true);
     expect(screen.queryByRole('progressbar')).toBeNull();
     click('開始');
     expect(screen.queryByRole('radio')).toBeNull();
-    expect(screen.getByText('Time: 6.0s')).not.toBeNull();
+    expect(screen.getByText('残り時間: 6.0秒')).not.toBeNull();
     advance(6000);
-    expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
-    expect(screen.getByText('Time: 7.0s')).not.toBeNull();
+    expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
+    expect(screen.getByText('残り時間: 7.0秒')).not.toBeNull();
     advance(7000);
-    expect(screen.queryByRole('heading', { name: 'Answer' })).toBeNull();
-    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
+    expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
     for (let number = 2; number <= questions.length; number++) {
       advance(timer().max);
-      expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
+      expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
       advance(timer().max);
     }
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(screen.queryByRole('progressbar')).toBeNull();
     expect(screen.queryByRole('radio')).toBeNull();
     expect(vi.getTimerCount()).toBe(0);
     click('もう一度');
     expect(screen.queryByRole('progressbar')).toBeNull();
-    expect((screen.getByRole('radio', { name: 'Normal' }) as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole('radio', { name: '標準' }) as HTMLInputElement).checked).toBe(true);
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it.each([['Slow', 10000, 10000], ['Fast', 3000, 4000]] as const)('uses selected %s tempo and retains it on reset', (tempo, questionMs, answerMs) => {
+  it.each([['ゆっくり', 10000, 10000], ['速い', 3000, 4000]] as const)('uses selected %s tempo and retains it on reset', (tempo, questionMs, answerMs) => {
     setup([questions[0]!]);
     fireEvent.click(screen.getByRole('radio', { name: tempo }));
     click('開始');
@@ -363,14 +363,14 @@ describe('Drill Timer integration', () => {
     click('開始');
     expect(timer().max).toBe(12000);
     advance(5900);
-    expect(screen.queryByRole('heading', { name: 'Answer' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
     advance(6100);
-    expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
     expect(timer().value).toBe(14000);
     advance(13900);
-    expect(screen.queryByRole('heading', { name: 'Drill Complete' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'ドリル完了' })).toBeNull();
     advance(100);
-    expect(screen.getByRole('heading', { name: 'Drill Complete' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
   });
 
   it('pauses manually and resumes from the remaining time', () => {
@@ -381,12 +381,12 @@ describe('Drill Timer integration', () => {
     expect(timer().value).toBe(3900);
     advance(20000);
     expect(timer().value).toBe(3900);
-    expect(screen.queryByRole('heading', { name: 'Answer' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
     click('再開');
     advance(3800);
-    expect(screen.queryByRole('heading', { name: 'Answer' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
     advance(100);
-    expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
   });
 
   it('manual reveal and next reset the timer and release manual pause', () => {
@@ -404,7 +404,7 @@ describe('Drill Timer integration', () => {
     expect(timer().value).toBe(6000);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
     advance(6000);
-    expect(screen.getByRole('heading', { name: 'Answer' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
   });
 
   it('holds the timer while glossary detail is open and resumes without resetting', () => {
@@ -417,13 +417,13 @@ describe('Drill Timer integration', () => {
     expect(timer().value).toBe(4200);
     advance(20000);
     expect(timer().value).toBe(4200);
-    expect(screen.getByRole('status').textContent).toBe(`Question 1 / ${questions.length}`);
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
     fireEvent.click(within(dialog).getByRole('button', { name: '閉じる' }));
     expect(timer().value).toBe(4200);
     advance(4100);
-    expect(screen.getByRole('status').textContent).toBe(`Question 1 / ${questions.length}`);
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
     advance(100);
-    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
+    expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
   });
 
   it('keeps manual pause after closing glossary detail', () => {
@@ -438,7 +438,7 @@ describe('Drill Timer integration', () => {
     expect(timer().value).toBe(6000);
     click('再開');
     advance(6000);
-    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
+    expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
   });
 
   it('does not pause or extend time on short tooltip hover or focus', () => {
@@ -450,18 +450,18 @@ describe('Drill Timer integration', () => {
     fireEvent.focus(trigger);
     expect(screen.getByRole('tooltip')).not.toBeNull();
     advance(7000);
-    expect(screen.getByRole('status').textContent).toBe(`Question 2 / ${questions.length}`);
+    expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
   });
 
   it('cleans up the timer when navigating away', () => {
     setup();
     click('開始');
     advance(2000);
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Home' }));
+    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
     expect(vi.getTimerCount()).toBe(0);
     advance(20000);
     expect(screen.queryByRole('progressbar')).toBeNull();
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Drill' }));
+    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ドリル' }));
     expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
   });
 });

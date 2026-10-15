@@ -9,11 +9,11 @@ export default function QuestionPreview({ question, collapseAnswer = false }: Qu
   const answerAndExplanation = (
     <>
       <section>
-        <h3>Answer</h3>
+        <h3>答え</h3>
         <p><InlineRenderer nodes={question.answer} /></p>
       </section>
       <section>
-        <h3>Explanation</h3>
+        <h3>解説</h3>
         {question.explanation.map((block, index) => <BlockRenderer block={block} key={index} />)}
       </section>
     </>
@@ -22,7 +22,7 @@ export default function QuestionPreview({ question, collapseAnswer = false }: Qu
     <article className={styles.question} data-question-id={question.id}>
       <h2>[{question.category}] {question.topic}</h2>
       <section>
-        <h3>Question</h3>
+        <h3>問題</h3>
         {question.prompt.map((block, index) => (
           <BlockRenderer block={block} key={index} />
         ))}

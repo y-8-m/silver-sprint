@@ -6,7 +6,7 @@ export default function InvalidContentNotice({ title, action }: InvalidContentNo
   return (
     <>
       <h2>{title}</h2>
-      <p role="alert">教材データにエラーがあるため{action}できません。<Link to="/">Home</Link>で検証結果を確認してください。</p>
+      <p role="alert">教材データにエラーがあるため{action}できません。<Link to="/">ホーム</Link>で検証結果を確認してください。</p>
     </>
   );
 }

@@ -20,7 +20,7 @@ export const questions = [
           text('には'),
           term('defaultValue', 'デフォルト値'),
           text('が設定されない。使用地点で'),
-          term('definiteAssignment', 'definitely assigned（確実に代入済み）'),
+          term('definiteAssignment', '確実に代入済み'),
           text('であることがコンパイル時に必要。このコードは宣言のみで、'),
           code('println(x)'),
           text('までに代入がないためコンパイルエラーになる。実行時に0や不定の値が出力されるわけではない。'),

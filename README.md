@@ -1,6 +1,6 @@
 # Silver Sprint
 
-Java Silver SE 17 Drill。教材データを問題一覧・用語一覧で参照し、用語の説明を確認できる学習アプリの土台。
+Java Silver SE 17 対策ドリル。教材データを問題一覧・用語集で参照し、用語の説明を確認できる学習アプリの土台。
 
 ## 開発
 
@@ -15,9 +15,9 @@ npm run build
 npm run preview
 ```
 
-HashRouterを使用し、`/silver-sprint/#/` はHome、`#/questions` は問題一覧、`#/glossary` は用語一覧。
-Homeには問題数・用語数・整合性検証結果を表示する。検証エラー時は各エラーの `path` と `message` を確認でき、両一覧の教材は描画しない。
-問題一覧はcategoryとtopic（categoryを変えたとき、新しいcategoryに存在しないtopicは自動で解除する）、用語一覧は検索とcategoryでAND条件の絞り込みができる。フィルタはページ内stateのみで、ページを離れるとリセットされる。
+HashRouterを使用し、`/silver-sprint/#/` はホーム、`#/questions` は問題一覧、`#/glossary` は用語集。
+ホームには問題数・用語数・整合性検証結果を表示する。検証エラー時は各エラーの `path` と `message` を確認でき、両一覧の教材は描画しない。
+問題一覧はcategoryとtopic（categoryを変えたとき、新しいcategoryに存在しないtopicは自動で解除する）、用語集は検索とcategoryでAND条件の絞り込みができる。フィルタはページ内stateのみで、ページを離れるとリセットされる。
 `npm test` は単発実行、`npm run test:watch` は監視実行。
 
 ## 構成
@@ -104,17 +104,17 @@ validatorは網羅性を型チェックするため、未対応のBlockを追加
 
 ## Drill
 
-`#/drill` はREADYでCourse（A〜D / Mixed）とOrder（Sequential / Random）を選び、1問ずつ出題するDrill。初期値はMixed / Sequential / Normalで、全問を教材定義順に出題する。
+`#/drill` は開始前にコース（A〜D / 全カテゴリ）と出題順（順番 / ランダム）を選び、1問ずつ出題するドリル。初期値は全カテゴリ / 順番 / 標準で、全問を教材定義順に出題する。
 `src/drill/sessionSequence.ts` がカテゴリで絞り込み、ID抽出後に順序を適用する。Randomは乱数源を注入できるFisher–Yatesで、元教材を変更しない。
-READYでCourse / Orderを変えると対象件数とsequenceを更新する。開始後はsession snapshotを固定し、完了後の「もう一度」で同じ設定から再生成する（Randomは再shuffle）。対象0問では開始できない。設定は保存しない。
+開始前にコース / 出題順を変えると対象件数とsequenceを更新する。開始後はsession snapshotを固定し、完了後の「もう一度」で同じ設定から再生成する（Randomは再shuffle）。対象0問では開始できない。設定は保存しない。
 進行は `src/drill/drillReducer.ts` の状態機械
 （`ready → question → answer → question … → finished`、`RESET` で `ready`）が管理する。
-「答えを見る」でAnswer・Explanationを表示し、「次へ」で進む。最後の問題では「完了」になる。
+「答えを見る」で答え・解説を表示し、「次へ」で進む。最後の問題では「完了」になる。
 出題順の選択や保存などの副作用はreducerの外に置く。自動採点は行わず、自己評価による戦績保存を行う。
 教材の検証エラー時は開始できない。
 
-READYでTempoを選び、Question / Answerの時間切れでも自動進行する。
-`src/drill/tempo.ts` に基準時間を集約している（Slow: 10秒 / 10秒、Normal: 6秒 / 7秒、Fast: 3秒 / 4秒）。
+開始前に速度を選び、問題 / 答えの時間切れでも自動進行する。
+`src/drill/tempo.ts` に基準時間を集約している（ゆっくり: 10秒 / 10秒、標準: 6秒 / 7秒、速い: 3秒 / 4秒）。
 両phaseとも基準時間 × `Question.timeWeight`（未指定は1）を使用する。
 `timeWeight` は有限で0より大きい数であることをvalidatorが検証する。それでも計算結果が非正数・非有限になった場合は基準時間へ戻す。
 
@@ -149,12 +149,12 @@ orphan記録は集計から除外し、弱点は最終評価がunsure / unknown�
 確認付きの戦績クリアに対応し、Drill・Review・Statsは各mount時に同じlocalStorageを読み込む。
 `#/review` は既存Drillをreview modeで使用し、弱点IDを教材順のsession snapshotとして保持する。
 評価でStatsが変わっても進行中のsequenceは固定し、完了後の「弱点を再取得」で最新Statsから再構成する。
-弱点がない場合は開始不可。StatsのWeak QuestionsからもReviewへ移動できる。コース選択は未実装。
+弱点がない場合は開始不可。戦績の「弱点問題」からも復習へ移動できる。コース選択は未実装。
 
 ## 静的Renderer
 
 `QuestionPreview → BlockRenderer → 各Block View → InlineRenderer` の順で描画する。
-QuestionPreviewはcategory・topic・Question・Answer・Explanationを表示し、Inlineの内部構造は扱わない。
+QuestionPreviewはカテゴリ・トピック・問題・答え・解説を表示し、Inlineの内部構造は扱わない。
 
 - Inlineのtextは要素wrapperなしの文字列、codeは `<code>`、glossaryは用語button。用語IDは `data-glossary-id` に保持し、hover/focusでshort、click/tapで詳細dialogを表示する。
 - TextBlockは `<p>`、CodeBlockは改行・字下げを保持する `<pre><code>`、StepsBlockは `<ol><li>`。
@@ -163,7 +163,7 @@ QuestionPreviewはcategory・topic・Question・Answer・Explanationを表示し
 - BlockRendererとInlineRendererは `never` で分岐の網羅性をチェックする。PromptはQuestion型の `PromptBlock[]` 制約を維持したままBlockRendererへ渡す。
 - 教材中の文字列はReactの通常のテキスト描画を使い、HTMLとして挿入しない。
 
-問題一覧の答え・解説は標準の `details` で初期状態を折りたたむ。用語一覧のshortは非interactiveなPlainInlineRenderer（`components/`。InlineRendererもtext・codeの描画に共用）で表示し、詳細ボタンから共通dialogを開く。
+問題一覧の答え・解説は標準の `details` で初期状態を折りたたむ。用語集のshortは非interactiveなPlainInlineRenderer（`components/`。InlineRendererもtext・codeの描画に共用）で表示し、詳細ボタンから共通dialogを開く。
 Glossary詳細は既存BlockRendererを使い、detail内の用語やrelatedを選ぶと同じdialogの内容を切り替える。Glossary自体はDrill進行や戦績保存を扱わない。
 
 描画テストは既存の `react-dom/server` の `renderToStaticMarkup` を使い、Node環境のVitestで実行する。

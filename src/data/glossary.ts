@@ -12,7 +12,7 @@ export const glossary = {
         content: [
           term('defaultValue', 'デフォルト値'),
           text('による自動初期化はされない。値を読み出す地点で'),
-          term('definiteAssignment', 'definitely assigned（確実に代入済み）'),
+          term('definiteAssignment', '確実に代入済み'),
           text('であることがコンパイル時に求められる。'),
         ],
       },
@@ -130,8 +130,9 @@ export const glossary = {
     category: '型',
     short: [text('整数系（charを含む）・浮動小数点型・booleanからなる8種類の基本型。変数はプリミティブ値を保持する。')],
     detail: [
+      { type: 'text', content: [text('プリミティブ型（primitive type）はプリミティブ値（primitive value）を保持する型。')] },
       { type: 'text', content: [code('byte'), text('、'), code('short'), text('、'), code('int'), text('、'), code('long'), text('、'), code('char'), text('、'), code('float'), text('、'), code('double'), text('、'), code('boolean'), text('の8種類。')] },
-      { type: 'text', content: [code('String'), text('は含まれず、クラス型（参照型）に分類される。参照型の変数が保持するのはオブジェクトへの'), term('reference', '参照'), text('、または'), code('null'), text('であり、プリミティブ値とは区別する。')] },
+      { type: 'text', content: [code('String'), text('は含まれず、クラス型（参照型）に分類される。参照型（reference type）の変数が保持する参照値（reference value）は、オブジェクトへの'), term('reference', '参照'), text('、または'), code('null'), text('であり、プリミティブ値とは区別する。')] },
     ],
     related: ['reference'],
   },
@@ -140,17 +141,18 @@ export const glossary = {
     category: '変数',
     short: [text('宣言した名前を単純名で参照できるプログラム上の範囲。代入済みかどうかとは別の条件。')],
     detail: [
-      { type: 'text', content: [text('ブロック内で宣言した'), term('localVariable', 'ローカル変数'), text('では、宣言自身の初期化式から同じブロックの終わりまでがscopeになる。名前を単純名で参照するとは、'), code('x'), text('のように名前だけで参照すること。')] },
-      { type: 'text', content: [code('int x = x;'), text('の右辺はscope内だが、まだ'), term('definiteAssignment', 'definitely assigned'), text('ではないのでコンパイルエラーになる。名前の有効範囲と、値を読み出せるかは分けて考える。')] },
+      { type: 'text', content: [text('スコープ（scope）は名前を単純名で参照できる範囲。ブロック内で宣言した'), term('localVariable', 'ローカル変数'), text('では、宣言自身の初期化式から同じブロックの終わりまでがスコープになる。名前を単純名で参照するとは、'), code('x'), text('のように名前だけで参照すること。')] },
+      { type: 'text', content: [code('int x = x;'), text('の右辺はスコープ内だが、まだ'), term('definiteAssignment', '確実に代入済み'), text('ではないのでコンパイルエラーになる。名前の有効範囲と、値を読み出せるかは分けて考える。')] },
     ],
     related: ['localVariable', 'definiteAssignment'],
   },
   definiteAssignment: {
-    term: '確実な代入（definite assignment）',
+    term: '確実な代入',
     category: '変数',
     short: [text('変数の値を読む地点で、そこへ至る経路の代入がコンパイル時の規則により保証されていること。')],
     detail: [
-      { type: 'text', content: [term('localVariable', 'ローカル変数'), text('は値を読み出す前にdefinitely assignedである必要がある。コンパイラは文・式の構造に沿って解析し、分岐後では各経路の代入状態を確認する。')] },
+      { type: 'text', content: [text('確実な代入（definite assignment）は、使用地点で確実に代入済み（definitely assigned）であることを保証するための規則。')] },
+      { type: 'text', content: [term('localVariable', 'ローカル変数'), text('は値を読み出す前に確実に代入済みである必要がある。コンパイラは文・式の構造に沿って解析し、分岐後では各経路の代入状態を確認する。')] },
       { type: 'text', content: [text('boolean定数式などには特別な規則があるが、一般には実行時の値を予測して経路を除外しない。'), code('boolean flag = true;'), text('の'), code('flag'), text('を条件にしたifだけでの代入は、分岐後の代入保証にならない。')] },
     ],
     related: ['localVariable', 'scope'],

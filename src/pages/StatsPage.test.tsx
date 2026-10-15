@@ -35,7 +35,7 @@ function setup(path = '/stats', data: Question[] = questions) {
 }
 
 function metric(label: string, expected: string) {
-  const summary = within(screen.getByRole('region', { name: 'Summary' }));
+  const summary = within(screen.getByRole('region', { name: '概要' }));
   expect(summary.getByText(label, { selector: 'dt' }).nextElementSibling?.textContent).toBe(expected);
 }
 
@@ -49,7 +49,7 @@ describe('Stats Page', () => {
     metric('○ 分かった', '3');
     metric('△ 怪しい', '1');
     metric('× 分からなかった', '2');
-    const table = within(screen.getByRole('table', { name: '問題別Stats（教材順）' }));
+    const table = within(screen.getByRole('table', { name: '問題別戦績（教材順）' }));
     const rows = table.getAllByRole('row');
     expect(rows).toHaveLength(questions.length + 1);
     for (let index = 0; index < questions.length; index++) {
@@ -59,19 +59,19 @@ describe('Stats Page', () => {
     expect(table.getAllByText('評価なし')).toHaveLength(questions.length - 3);
     expect(within(rows[1]!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['C', '0', '0', '2', '× 分からなかった', '2026/10/15 10:00:00']);
     expect(table.getByText('2026/10/15 10:00:00').getAttribute('datetime')).toBe('2026-10-15T01:00:00Z');
-    expect(screen.getByRole('navigation').textContent).toBe('HomeQuestionsGlossaryDrillReviewStats');
-    expect(within(screen.getByRole('navigation')).getByRole('link', { name: 'Stats' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('navigation').textContent).toBe('ホーム問題一覧用語集ドリル復習戦績');
+    expect(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }).getAttribute('aria-current')).toBe('page');
   });
 
   it('shows weak questions in material order and recent evaluations newest first', () => {
     repository().save(seed);
     setup();
-    const weak = within(screen.getByRole('region', { name: 'Weak Questions' })).getAllByRole('listitem');
+    const weak = within(screen.getByRole('region', { name: '弱点問題' })).getAllByRole('listitem');
     expect(weak.map((item) => item.textContent)).toEqual([
       `[C] ${questions[0]!.topic}最後の評価: × 分からなかった`,
       `[B] ${questions[1]!.topic}最後の評価: △ 怪しい`,
     ]);
-    const recent = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('listitem');
+    const recent = within(screen.getByRole('region', { name: '最近の評価' })).getAllByRole('listitem');
     expect(recent).toHaveLength(3);
     expect(recent[0]?.textContent).toContain(questions[2]!.topic);
     expect(recent[1]?.textContent).toContain(questions[1]!.topic);
@@ -154,18 +154,18 @@ describe('Stats Page', () => {
     fireEvent.click(screen.getByRole('button', { name: '開始' }));
     act(() => vi.advanceTimersByTime(6000));
     fireEvent.click(screen.getByRole('button', { name: '△ 怪しい' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Stats' }));
+    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }));
     metric('評価済み問題', `1 / ${questions.length}`);
     metric('△ 怪しい', '1');
-    expect(within(screen.getByRole('region', { name: 'Weak Questions' })).getByText(`[C] ${questions[0]!.topic}`)).not.toBeNull();
-    expect(within(screen.getByRole('region', { name: 'Recent' })).getByText(/[C].*ローカル変数の初期化/)).not.toBeNull();
+    expect(within(screen.getByRole('region', { name: '弱点問題' })).getByText(`[C] ${questions[0]!.topic}`)).not.toBeNull();
+    expect(within(screen.getByRole('region', { name: '最近の評価' })).getByText(/[C].*ローカル変数の初期化/)).not.toBeNull();
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Drill' }));
+    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ドリル' }));
     fireEvent.click(screen.getByRole('button', { name: '開始' }));
     fireEvent.click(screen.getByRole('button', { name: '答えを見る' }));
     fireEvent.click(screen.getByRole('button', { name: '○ 分かった' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Stats' }));
+    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }));
     metric('○ 分かった', '1');
     metric('△ 怪しい', '0');
     expect(screen.getByText('弱点候補はありません。')).not.toBeNull();
@@ -177,8 +177,8 @@ describe('Stats Page', () => {
     expect(screen.getByRole('alert').textContent).toContain('教材データにエラー');
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('button', { name: '戦績をクリア' })).toBeNull();
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'Home' }));
-    expect(screen.getByText('Data validation: ERROR')).not.toBeNull();
+    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
+    expect(screen.getByText('教材データ: エラー')).not.toBeNull();
   });
 
   it('handles corrupt storage with the empty state', () => {

@@ -9,11 +9,11 @@ type CourseSelectorProps = { course: Course; onChange(course: Course): void };
 export default function CourseSelector({ course, onChange }: CourseSelectorProps) {
   return (
     <fieldset className={styles.settings}>
-      <legend>Course</legend>
+      <legend>コース</legend>
       {COURSES.map((option) => (
         <label key={option}>
           <input type="radio" name="course" value={option} checked={course === option} onChange={() => onChange(option)} />
-          {option === 'mixed' ? 'Mixed' : `${option} ${CATEGORY_LABELS[option]}`}
+          {option === 'mixed' ? '全カテゴリ' : `${option} ${CATEGORY_LABELS[option]}`}
         </label>
       ))}
     </fieldset>

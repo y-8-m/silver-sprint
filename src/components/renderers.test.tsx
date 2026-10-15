@@ -113,9 +113,9 @@ describe('Content preview', () => {
       <>{questions.map((question) => <QuestionPreview question={question} key={question.id} />)}</>,
     );
     expect(html.match(/<article\b/g)).toHaveLength(questions.length);
-    expect(html.match(/<h3>Question<\/h3>/g)).toHaveLength(questions.length);
-    expect(html.match(/<h3>Answer<\/h3>/g)).toHaveLength(questions.length);
-    expect(html.match(/<h3>Explanation<\/h3>/g)).toHaveLength(questions.length);
+    expect(html.match(/<h3>問題<\/h3>/g)).toHaveLength(questions.length);
+    expect(html.match(/<h3>答え<\/h3>/g)).toHaveLength(questions.length);
+    expect(html.match(/<h3>解説<\/h3>/g)).toHaveLength(questions.length);
     questions.forEach((question) => {
       expect(html).toContain(`data-question-id="${question.id}"`);
       expect(html).toContain(`<h2>[${question.category}] ${question.topic}</h2>`);

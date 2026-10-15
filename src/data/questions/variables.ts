@@ -14,10 +14,10 @@ export const additionalVariableQuestions = [
     category: 'A',
     topic: '型の大分類',
     prompt: [
-      { type: 'text', content: [text('次の変数は、それぞれprimitive valueとreference valueのどちらを保持する？')] },
+      { type: 'text', content: [text('次の変数は、それぞれプリミティブ値と参照値のどちらを保持する？')] },
       { type: 'code', language: 'java', code: 'int x = 10;\nString s = "Java";' },
     ],
-    answer: [code('x'), text('はprimitive value、'), code('s'), text('はreference valueを保持する。')],
+    answer: [code('x'), text('はプリミティブ値、'), code('s'), text('は参照値を保持する。')],
     explanation: [
       { type: 'text', content: [text('変数には型があり、その型によって保持できる値が決まる。'), term('primitiveType', 'プリミティブ型'), text('の変数はプリミティブ値を、参照型の変数は参照値を保持する。')] },
       { type: 'comparison', columns: [
@@ -25,8 +25,8 @@ export const additionalVariableQuestions = [
         { key: 'example', label: '変数の例' },
         { key: 'value', label: '保持する値' },
       ], rows: [
-        { id: 'primitive', cells: { type: [text('primitive type')], example: [code('int x')], value: [text('primitive value（例：'), code('10'), text('）')] } },
-        { id: 'reference', cells: { type: [text('reference type')], example: [code('String s')], value: [text('reference value（オブジェクトへの'), term('reference', '参照'), text('、または'), code('null'), text('）')] } },
+        { id: 'primitive', cells: { type: [text('プリミティブ型')], example: [code('int x')], value: [text('プリミティブ値（例：'), code('10'), text('）')] } },
+        { id: 'reference', cells: { type: [text('参照型')], example: [code('String s')], value: [text('参照値（オブジェクトへの'), term('reference', '参照'), text('、または'), code('null'), text('）')] } },
       ] },
       { type: 'text', content: [code('String'), text('はクラス型なので参照型。'), code('s'), text('に文字列オブジェクトそのものが格納されるわけではない。')] },
     ],
@@ -35,7 +35,7 @@ export const additionalVariableQuestions = [
     id: 'primitive-types',
     category: 'D',
     topic: 'プリミティブ型',
-    prompt: [{ type: 'text', content: [code('int'), text('、'), code('boolean'), text('、'), code('char'), text('、'), code('String'), text('のうち、primitive typeではないものはどれ？')] }],
+    prompt: [{ type: 'text', content: [code('int'), text('、'), code('boolean'), text('、'), code('char'), text('、'), code('String'), text('のうち、プリミティブ型ではないものはどれ？')] }],
     answer: [code('String')],
     explanation: [
       { type: 'text', content: [term('primitiveType', 'プリミティブ型'), text('は'), code('byte'), text('、'), code('short'), text('、'), code('int'), text('、'), code('long'), text('、'), code('char'), text('、'), code('float'), text('、'), code('double'), text('、'), code('boolean'), text('の8種類。')] },
@@ -75,7 +75,7 @@ export const additionalVariableQuestions = [
   {
     id: 'definite-assignment-if',
     category: 'B',
-    topic: 'definite assignment',
+    topic: '確実な代入（definite assignment）',
     timeWeight: 1.5,
     prompt: [
       { type: 'text', content: [text('次のコードをメソッド内に書くと、正常に出力される？ それともコンパイルエラーになる？')] },
@@ -94,7 +94,7 @@ System.out.println(x);` },
         [code('int x;'), text('は宣言のみ。この時点では'), code('x'), text('は未代入。')],
         [code('if'), text('側では'), code('x = 10;'), text('によって代入済みになる。')],
         [code('else'), text('がないため、条件がfalseの経路では'), code('x'), text('に代入されない。')],
-        [text('コンパイラの'), term('definiteAssignment', 'definite assignment解析'), text('では、分岐後の使用地点で代入済みと保証できない。実行に進まず、出力はない。')],
+        [text('コンパイラの'), term('definiteAssignment', '確実な代入の解析'), text('では、分岐後の使用地点で代入済みと保証できない。実行に進まず、出力はない。')],
       ] },
       { type: 'text', content: [code('flag'), text('は'), code('final'), text('ではないため、この'), code('flag'), text('という条件式はコンパイル時定数式ではない。初期値が'), code('true'), text('でも、解析はその値からfalse側の経路を除外しない。実行時の値だけでコンパイル可否を判断しない。')] },
     ],
@@ -102,7 +102,7 @@ System.out.println(x);` },
   {
     id: 'definite-assignment-if-else',
     category: 'B',
-    topic: 'definite assignment',
+    topic: '確実な代入（definite assignment）',
     timeWeight: 1.5,
     prompt: [
       { type: 'text', content: [text('次のコードをメソッド内に書くとコンパイルできる？ できる場合、何が出力される？')] },
@@ -123,7 +123,7 @@ System.out.println(x);` },
         [text('宣言直後の'), code('x'), text('は未代入。')],
         [code('if'), text('側では'), code('x = 10;'), text('によって代入済みになる。')],
         [code('else'), text('側でも'), code('x = 20;'), text('によって代入済みになる。')],
-        [text('どちらの経路から来ても'), code('println'), text('地点で'), code('x'), text('は代入済み。'), term('definiteAssignment', 'definite assignment解析'), text('を満たし、コンパイルできる。')],
+        [text('どちらの経路から来ても'), code('println'), text('地点で'), code('x'), text('は代入済み。'), term('definiteAssignment', '確実な代入の解析'), text('を満たし、コンパイルできる。')],
         [text('実行時には'), code('flag'), text('が'), code('true'), text('なのでif側を通り、'), code('10'), text('を出力する。')],
       ] },
       { type: 'text', content: [code('else'), text('のない問題との違いは、コンパイル時にすべての分岐経路で代入を保証できること。実行時に選ばれる経路とは分けて考える。')] },
@@ -143,7 +143,7 @@ System.out.println(x);` },
     ],
     answer: [text('ブロック外の'), code('println'), text('でコンパイルエラー。')],
     explanation: [
-      { type: 'text', content: [term('scope', 'スコープ'), text('は、その宣言の名前を単純名（'), code('x'), text('だけ）で参照できる範囲。ここで宣言した'), term('localVariable', 'ローカル変数'), code('x'), text('のscopeは宣言自身の初期化式から同じブロックの終わりまで。代入済みでもブロックの外からは参照できない。')] },
+      { type: 'text', content: [term('scope', 'スコープ'), text('は、その宣言の名前を単純名（'), code('x'), text('だけ）で参照できる範囲。ここで宣言した'), term('localVariable', 'ローカル変数'), code('x'), text('のスコープは宣言自身の初期化式から同じブロックの終わりまで。代入済みでもブロックの外からは参照できない。')] },
       { type: 'code', language: 'java', code: `{
     int x = 10;
     // ここではxを参照できる
@@ -166,7 +166,7 @@ System.out.println(i);` },
     ],
     answer: [text('最後の'), code('println'), text('でコンパイルエラー。')],
     explanation: [
-      { type: 'text', content: [code('for'), text('初期化部で宣言した'), code('i'), text('の'), term('scope', 'スコープ'), text('は、自身の初期化式を含む初期化部の残り・条件部・更新部・本体。for文終了後はscope外になる。')] },
+      { type: 'text', content: [code('for'), text('初期化部で宣言した'), code('i'), text('の'), term('scope', 'スコープ'), text('は、自身の初期化式を含む初期化部の残り・条件部・更新部・本体。for文終了後はスコープ外になる。')] },
       { type: 'text', content: [text('ループ本体の'), code('println(i)'), text('では参照できるが、最後の'), code('println(i)'), text('では参照できない。コード全体がコンパイルに失敗するので、途中まで実行して'), code('0'), text('、'), code('1'), text('、'), code('2'), text('を出力するわけではない。')] },
     ],
   },
@@ -175,14 +175,14 @@ System.out.println(i);` },
     category: 'C',
     topic: 'スコープと初期化',
     prompt: [
-      { type: 'text', content: [text('次のローカル変数宣言はコンパイルできる？ scopeと代入済みかどうかを分けて考えよう。')] },
+      { type: 'text', content: [text('次のローカル変数宣言はコンパイルできる？ スコープと代入済みかどうかを分けて考えよう。')] },
       { type: 'code', language: 'java', code: 'int x = x;' },
     ],
-    answer: [text('コンパイルエラー。右辺の'), code('x'), text('はscope内だが、まだ代入済みではない。')],
+    answer: [text('コンパイルエラー。右辺の'), code('x'), text('はスコープ内だが、まだ代入済みではない。')],
     explanation: [
-      { type: 'text', content: [term('localVariable', 'ローカル変数'), text('の'), term('scope', 'スコープ'), text('は宣言自身の初期化式を含む。したがって、右辺の'), code('x'), text('は新しく宣言しているローカル変数'), code('x'), text('を参照する。scope外だから失敗するわけではない。')] },
-      { type: 'text', content: [text('初期化は右辺を評価してからその値を代入する。右辺で値を読み出す時点では、'), code('x'), text('はまだ'), term('definiteAssignment', 'definitely assigned（確実に代入済み）'), text('ではないためコンパイルエラーになる。')] },
-      { type: 'text', content: [text('scope内で名前を参照できること、使用前の代入が保証されること、型が代入可能であることは、それぞれ別の条件。ここでは型は同じ'), code('int'), text('でも、代入保証を満たさない。')] },
+      { type: 'text', content: [term('localVariable', 'ローカル変数'), text('の'), term('scope', 'スコープ'), text('は宣言自身の初期化式を含む。したがって、右辺の'), code('x'), text('は新しく宣言しているローカル変数'), code('x'), text('を参照する。スコープ外だから失敗するわけではない。')] },
+      { type: 'text', content: [text('初期化は右辺を評価してからその値を代入する。右辺で値を読み出す時点では、'), code('x'), text('はまだ'), term('definiteAssignment', '確実に代入済み'), text('ではないためコンパイルエラーになる。')] },
+      { type: 'text', content: [text('スコープ内で名前を参照できること、使用前の代入が保証されること、型が代入可能であることは、それぞれ別の条件。ここでは型は同じ'), code('int'), text('でも、代入保証を満たさない。')] },
     ],
   },
   {

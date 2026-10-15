@@ -34,7 +34,7 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   const total = getTotalQuestions(state);
   const [tempo, setTempo] = useState<Tempo>('normal');
   const [manualPauseKey, setManualPauseKey] = useState<string | null>(null);
-  const title = mode === 'review' ? 'Review' : 'Drill';
+  const title = mode === 'review' ? '復習' : 'ドリル';
   function changeSessionSettings(next: SessionSettings) {
     if (mode === 'review' || state.phase !== 'ready') return;
     const questionIds = buildQuestionSequence(questions, next);
@@ -109,9 +109,9 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   if (state.phase === 'finished') {
     return (
       <section className={styles.finished}>
-        <h2>{title} Complete</h2>
+        <h2>{title}完了</h2>
         {saveError}
-        <p>{total} / {total} questions completed</p>
+        <p>{total} / {total} 問完了</p>
         <button className={styles.action} type="button" onClick={resetSession}>{mode === 'review' ? '弱点を再取得' : 'もう一度'}</button>
       </section>
     );
@@ -131,7 +131,7 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
     <>
       <h2>{title}</h2>
       {saveError}
-      <p className={styles.progress} role="status">Question {getCurrentQuestionNumber(state)} / {total}</p>
+      <p className={styles.progress} role="status">{getCurrentQuestionNumber(state)} / {total} 問</p>
       <DrillTimerBar
         remainingMs={remainingMs}
         durationMs={durationMs}
@@ -142,17 +142,17 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
       <article data-question-id={question.id}>
         <h3 ref={headingRef} tabIndex={-1}>[{question.category}] {question.topic}</h3>
         <section className={styles.area}>
-          <h4>Question</h4>
+          <h4>問題</h4>
           {question.prompt.map((block, index) => <BlockRenderer block={block} key={index} />)}
         </section>
         {state.phase === 'answer' && (
           <>
             <section className={styles.area}>
-              <h4>Answer</h4>
+              <h4>答え</h4>
               <p><InlineRenderer nodes={question.answer} /></p>
             </section>
             <section className={styles.area}>
-              <h4>Explanation</h4>
+              <h4>解説</h4>
               {question.explanation.map((block, index) => <BlockRenderer block={block} key={index} />)}
             </section>
           </>

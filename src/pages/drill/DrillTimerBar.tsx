@@ -11,7 +11,7 @@ type DrillTimerBarProps = {
 export default function DrillTimerBar({ remainingMs, durationMs, manualPaused, glossaryOpen, onTogglePause }: DrillTimerBarProps) {
   return (
     <div className={styles.timer}>
-      <span>Time: {(remainingMs / 1000).toFixed(1)}s</span>
+      <span>残り時間: {(remainingMs / 1000).toFixed(1)}秒</span>
       <progress aria-label="残り時間" max={durationMs} value={remainingMs} />
       {(manualPaused || glossaryOpen) && <span>一時停止中</span>}
       <button className={styles.action} type="button" onClick={onTogglePause}>

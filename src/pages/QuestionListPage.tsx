@@ -9,7 +9,7 @@ export default function QuestionListPage({ questions, valid }: { questions: Ques
   const [category, setCategory] = useState('');
   const [topic, setTopic] = useState('');
   if (!valid) {
-    return <InvalidContentNotice title="Questions" action="表示" />;
+    return <InvalidContentNotice title="問題一覧" action="表示" />;
   }
   // Drop a topic that cannot match the newly chosen category instead of silently emptying the list.
   const changeCategory = (next: string) => {
@@ -24,22 +24,22 @@ export default function QuestionListPage({ questions, valid }: { questions: Ques
   ));
   return (
     <>
-      <h2>Questions</h2>
+      <h2>問題一覧</h2>
       <div className={styles.filters}>
-        <label>Question category
+        <label>カテゴリ
           <select value={category} onChange={(event) => changeCategory(event.target.value)}>
-            <option value="">All</option>
+            <option value="">すべて</option>
             {Object.entries(CATEGORY_LABELS).map(([value, label]) => <option value={value} key={value}>{value} = {label}</option>)}
           </select>
         </label>
-        <label>Topic
+        <label>トピック
           <select value={topic} onChange={(event) => setTopic(event.target.value)}>
-            <option value="">All</option>
+            <option value="">すべて</option>
             {topics.map((value) => <option value={value} key={value}>{value}</option>)}
           </select>
         </label>
       </div>
-      <p role="status">{filtered.length} / {questions.length} questions</p>
+      <p role="status">{filtered.length} / {questions.length} 問</p>
       {filtered.length === 0 && <p className={styles.empty}>条件に一致する問題はありません。</p>}
       {filtered.map((question) => <QuestionPreview question={question} collapseAnswer key={question.id} />)}
     </>
