@@ -154,6 +154,8 @@ describe('Stats Page', () => {
     fireEvent.click(screen.getByRole('button', { name: '開始' }));
     act(() => vi.advanceTimersByTime(10000));
     fireEvent.click(screen.getByRole('button', { name: '△ 怪しい' }));
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
     fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }));
     metric('評価済み問題', `1 / ${questions.length}`);
     metric('△ 怪しい', '1');
@@ -165,6 +167,8 @@ describe('Stats Page', () => {
     fireEvent.click(screen.getByRole('button', { name: '開始' }));
     fireEvent.click(screen.getByRole('button', { name: '答えを見る' }));
     fireEvent.click(screen.getByRole('button', { name: '○ 分かった' }));
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
     fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }));
     metric('○ 分かった', '1');
     metric('△ 怪しい', '0');

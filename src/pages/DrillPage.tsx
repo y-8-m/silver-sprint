@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
+import type { LayoutOutletContext } from '../app/layoutOutletContext';
 import InvalidContentNotice from '../components/InvalidContentNotice';
 import { AnswerAndExplanationSections, PromptSection } from '../components/QuestionSections';
 import { CATEGORY_LABELS } from '../data/categoryLabels';
@@ -12,8 +13,12 @@ import { buildQuestionSequence } from '../drill/sessionSequence';
 import type { SessionSettings } from '../drill/sessionSequence';
 import { getPhaseDurationMs } from '../drill/tempo';
 import type { Tempo } from '../drill/tempo';
+import { useDrillKeys } from '../drill/useDrillKeys';
 import { useDrillTimer } from '../drill/useDrillTimer';
 import { useGlossary } from '../glossary/GlossaryContext';
+import HelpButton from '../help/HelpButton';
+import { useHelp } from '../help/HelpContext';
+import type { Rating } from '../stats/statsTypes';
 import type { StatsRepository } from '../stats/statsRepository';
 import { useStats } from '../stats/useStats';
 import { getWeakQuestionIds } from '../stats/statsSelectors';
@@ -70,6 +75,8 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   const resetKey = `${state.currentIndex}:${id}:${state.phase}`;
   const manualPaused = manualPauseKey === resetKey;
   const glossaryOpen = glossary != null && glossary.selectedGlossaryId !== null;
+  const helpOpen = useHelp()?.open ?? false;
+  const overlayOpen = glossaryOpen || helpOpen;
   useEffect(() => setManualPauseKey(null), [resetKey]);
   // Rating buttons unmount on advance; move focus to the new question instead of dropping it to <body>.
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -81,10 +88,28 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   useEffect(() => {
     if (state.phase === 'answer') answerRef.current?.scrollIntoView?.({ block: 'start' });
   }, [state.phase, state.currentIndex]);
+  // An active session takes the whole screen: the app header and navigation step aside.
+  const layout = useOutletContext<LayoutOutletContext | undefined>();
+  const setImmersive = layout?.setImmersive;
+  const inSession = valid && (state.phase === 'question' || state.phase === 'answer');
+  useEffect(() => {
+    setImmersive?.(inSession);
+    return () => setImmersive?.(false);
+  }, [inSession, setImmersive]);
+  function rateCurrent(rating: Rating) {
+    if (state.phase !== 'answer' || question === undefined) return;
+    record(question.id, rating);
+    dispatch({ type: 'NEXT' });
+  }
+  useDrillKeys(active && !overlayOpen, state.phase === 'answer', {
+    onTogglePause: () => setManualPauseKey(manualPaused ? null : resetKey),
+    onPrimary: () => dispatch({ type: state.phase === 'question' ? 'REVEAL_ANSWER' : 'NEXT' }),
+    onRate: rateCurrent,
+  });
   const { remainingMs } = useDrillTimer({
     durationMs,
     enabled: active,
-    paused: manualPaused || glossaryOpen,
+    paused: manualPaused || overlayOpen,
     resetKey,
     onExpire: () => dispatch({ type: 'TIMER_EXPIRED' }),
   });
@@ -154,15 +179,18 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
           終了
         </button>
         <p className={styles.progress} role="status">{getCurrentQuestionNumber(state)} / {total} 問</p>
-        <button className={styles.quiet} type="button" onClick={() => setManualPauseKey(manualPaused ? null : resetKey)}>
-          {manualPaused ? '再開' : '一時停止'}
-        </button>
+        <div className={styles.headerEnd}>
+          <HelpButton className={styles.helpButton} />
+          <button className={styles.quiet} type="button" onClick={() => setManualPauseKey(manualPaused ? null : resetKey)}>
+            {manualPaused ? '再開' : '一時停止'}
+          </button>
+        </div>
       </div>
       <DrillTimerBar
         remainingMs={remainingMs}
         durationMs={durationMs}
         manualPaused={manualPaused}
-        glossaryOpen={glossaryOpen}
+        overlayOpen={overlayOpen}
       />
       <article data-question-id={question.id}>
         <h3 className={styles.meta} ref={headingRef} tabIndex={-1}>
@@ -182,10 +210,7 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
       </article>
       <div className={styles.actions}>
         {state.phase === 'answer' && (
-          <RatingButtons onRate={(rating) => {
-            record(question.id, rating);
-            dispatch({ type: 'NEXT' });
-          }} />
+          <RatingButtons onRate={rateCurrent} />
         )}
         {state.phase === 'question' ? (
           <button className={styles.primary} type="button" onClick={() => dispatch({ type: 'REVEAL_ANSWER' })}>答えを見る</button>

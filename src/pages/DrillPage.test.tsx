@@ -457,6 +457,8 @@ describe('Drill Timer integration', () => {
     setup();
     click('開始');
     advance(2000);
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
     fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
     expect(vi.getTimerCount()).toBe(0);
     advance(20000);

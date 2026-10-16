@@ -4,6 +4,8 @@ import type { GlossaryDictionary, Question } from '../data/types';
 import { validateContent } from '../data/validate';
 import GlossaryDetailDialog from '../glossary/GlossaryDetailDialog';
 import GlossaryProvider from '../glossary/GlossaryProvider';
+import HelpDialog from '../help/HelpDialog';
+import HelpProvider from '../help/HelpProvider';
 import GlossaryPage from '../pages/GlossaryPage';
 import DrillPage from '../pages/DrillPage';
 import HomePage from '../pages/HomePage';
@@ -18,18 +20,21 @@ export default function AppRoutes({ questions, glossary }: AppRoutesProps) {
   const validation = useMemo(() => validateContent(questions, glossary), [questions, glossary]);
   return (
     <GlossaryProvider glossary={glossary}>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<HomePage questions={questions} validation={validation} />} />
-          <Route path="questions" element={<QuestionListPage questions={questions} valid={validation.valid} />} />
-          <Route path="glossary" element={<GlossaryPage glossary={glossary} valid={validation.valid} />} />
-          <Route path="drill" element={<DrillPage key="all" mode="all" questions={questions} valid={validation.valid} />} />
-          <Route path="review" element={<DrillPage key="review" mode="review" questions={questions} valid={validation.valid} />} />
-          <Route path="stats" element={<StatsPage questions={questions} valid={validation.valid} />} />
-          <Route path="*" element={<><h2>ページが見つかりません。</h2><Link to="/">ホームへ戻る</Link></>} />
-        </Route>
-      </Routes>
-      <GlossaryDetailDialog />
+      <HelpProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<HomePage questions={questions} validation={validation} />} />
+            <Route path="questions" element={<QuestionListPage questions={questions} valid={validation.valid} />} />
+            <Route path="glossary" element={<GlossaryPage glossary={glossary} valid={validation.valid} />} />
+            <Route path="drill" element={<DrillPage key="all" mode="all" questions={questions} valid={validation.valid} />} />
+            <Route path="review" element={<DrillPage key="review" mode="review" questions={questions} valid={validation.valid} />} />
+            <Route path="stats" element={<StatsPage questions={questions} valid={validation.valid} />} />
+            <Route path="*" element={<><h2>ページが見つかりません。</h2><Link to="/">ホームへ戻る</Link></>} />
+          </Route>
+        </Routes>
+        <GlossaryDetailDialog />
+        <HelpDialog />
+      </HelpProvider>
     </GlossaryProvider>
   );
 }

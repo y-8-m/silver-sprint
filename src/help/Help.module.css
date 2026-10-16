@@ -1,0 +1,97 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+/* 下から出るシート。広い画面では中央の1カラム幅に収める */
+.sheet {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--content-max-width);
+  max-height: 85dvh;
+  margin: auto auto 0;
+  overflow: auto;
+  padding: var(--space-6) var(--gutter) var(--space-6);
+  border: 0;
+  border-top: var(--border-strong);
+  border-radius: 0;
+  background: var(--color-ground);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 30%);
+}
+
+.sheet h2 {
+  margin: 0 0 var(--space-4);
+  font-size: 1.25rem;
+}
+
+.sheet h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.keys {
+  margin: 0;
+  border-bottom: var(--border-hairline);
+}
+
+.keys > div {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  padding-block: var(--space-2);
+  border-top: var(--border-hairline);
+}
+
+.keys dt {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.keys dd {
+  margin: 0;
+  font-size: var(--font-size-body);
+}
+
+.keys kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.note {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.close {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--button-primary-height);
+  margin-top: var(--space-4);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

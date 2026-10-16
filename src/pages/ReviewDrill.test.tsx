@@ -185,14 +185,18 @@ describe('Review Drill', () => {
   it('starts a fresh mode snapshot when navigating directly between Review and Drill', () => {
     setup();
     click('開始');
-    const nav = within(screen.getByRole('navigation'));
-    fireEvent.click(nav.getByRole('link', { name: 'ドリル' }));
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
+    const nav = () => within(screen.getByRole('navigation'));
+    fireEvent.click(nav().getByRole('link', { name: 'ドリル' }));
     expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
     click('開始');
     expectQuestion(firstId, 1, questions.length);
-    fireEvent.click(nav.getByRole('link', { name: '復習' }));
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
+    fireEvent.click(nav().getByRole('link', { name: '復習' }));
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
-    expect(nav.getByRole('link', { name: '復習' }).getAttribute('aria-current')).toBe('page');
+    expect(nav().getByRole('link', { name: '復習' }).getAttribute('aria-current')).toBe('page');
     expect(screen.queryByRole('article')).toBeNull();
   });
 
@@ -212,6 +216,8 @@ describe('Review Drill', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'B 実行順・状態遷移' }));
     fireEvent.click(screen.getByRole('radio', { name: 'ランダム' }));
     click('開始');
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
     fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '復習' }));
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
     expect(screen.queryByRole('group', { name: 'コース' })).toBeNull();

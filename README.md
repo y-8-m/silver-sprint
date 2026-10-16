@@ -127,6 +127,8 @@ DrillPageが通知を `TIMER_EXPIRED` としてdispatchし、reducerがQuestion�
 Timer・Tempo・pauseはDrillStateの外で管理し、unmount時にTimerを解除する。
 hookとDrill連携の時間経過テストにはfake timersを使用している。
 
+ドリル中（出題・答えの各phase）はアプリのヘッダーとナビを隠し、左上の「終了」（確認つき）で抜ける。キー操作は Space＝一時停止／再開、Enter＝答えを見る／次へ（未評価で進む）、1 / 2 / 3＝○ / △ / × 評価して次へ（`src/drill/useDrillKeys.ts`）。ボタン・リンクにフォーカスがあるときの Space / Enter、入力欄、dialog表示中、修飾キーつきは処理しない。各画面右上の「?」でヘルプシート（`src/help/`）を開き、キー操作の一覧を確認できる。ヘルプや用語を開いている間は残り時間が止まる。
+
 ANSWERには「○ 分かった」「△ 怪しい」「× 分からなかった」の自己評価を表示する。
 評価時だけ問題ごとのknown / unsure / unknown件数と、最後の評価・ISO日時を保存して `NEXT` へ進む。
 「次へ」「完了」やTimer expiryは未評価として進み、戦績を変更しない。

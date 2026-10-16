@@ -43,6 +43,15 @@
   justify-content: flex-end;
 }
 
+.headerEnd {
+  display: flex;
+  align-items: center;
+}
+
+.helpButton {
+  width: 2.75rem;
+}
+
 /* 残り時間：整数秒と4pxの細いバー。残り3秒だけ色を変える */
 .timer {
   display: flex;
