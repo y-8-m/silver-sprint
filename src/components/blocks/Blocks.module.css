@@ -4,10 +4,13 @@
 
 .code {
   overflow-x: auto;
-  padding: 1rem;
-  background: ButtonFace;
-  color: ButtonText;
-  font-family: ui-monospace, monospace;
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-code);
+  line-height: 1.7;
   white-space: pre;
 }
 
@@ -33,13 +36,12 @@
 .table th,
 .table td {
   padding: 0.5rem;
-  border: 1px solid GrayText;
+  border: var(--border-hairline);
   text-align: start;
   vertical-align: top;
 }
 
 .highlight {
-  background: ButtonFace;
-  color: ButtonText;
+  background: var(--color-surface-subtle);
   font-weight: 600;
 }

@@ -1,8 +1,9 @@
 .code {
   padding: 0.1em 0.25em;
-  background: ButtonFace;
-  color: ButtonText;
-  font-family: ui-monospace, monospace;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
 }
 
 .glossary {

@@ -109,7 +109,7 @@ describe('Review Drill', () => {
     click('開始');
     for (let index = 0; index < 2; index++) {
       click('答えを見る');
-      if (method === 'manual next') click(index === 0 ? '次へ' : '完了');
+      if (method === 'manual next') click(index === 0 ? '評価せずに次へ' : '評価せずに完了');
       else advance(10000);
     }
     expect(screen.getByRole('heading', { name: '復習完了' })).not.toBeNull();
@@ -174,7 +174,7 @@ describe('Review Drill', () => {
     for (let index = 0; index < questions.length; index++) {
       expectQuestion(questions[index]!.id, index + 1, questions.length);
       click('答えを見る');
-      click(index === questions.length - 1 ? '完了' : '次へ');
+      click(index === questions.length - 1 ? '評価せずに完了' : '評価せずに次へ');
     }
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     click('もう一度');
@@ -219,7 +219,7 @@ describe('Review Drill', () => {
     click('開始');
     expectQuestion(firstId, 1, 2);
     click('答えを見る');
-    click('次へ');
+    click('評価せずに次へ');
     expectQuestion(thirdId, 2, 2);
   });
 

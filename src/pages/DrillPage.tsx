@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import InvalidContentNotice from '../components/InvalidContentNotice';
 import { AnswerAndExplanationSections, PromptSection } from '../components/QuestionSections';
+import { CATEGORY_LABELS } from '../data/categoryLabels';
 import type { Question } from '../data/types';
 import { parseDrillLaunch } from '../drill/drillLaunch';
 import { createInitialDrillState, drillReducer } from '../drill/drillReducer';
@@ -25,6 +26,7 @@ import styles from './DrillPage.module.css';
 
 export default function DrillPage({ mode = 'all', questions, valid, statsRepository }: { mode?: DrillMode; questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
   const { stats, record, saveFailed } = useStats(statsRepository);
+  const navigate = useNavigate();
   // A launch from Home (?course=...) fixes the settings and starts at once; read once on mount.
   const [searchParams] = useSearchParams();
   const [launch] = useState(() => (mode === 'all' ? parseDrillLaunch(searchParams) : null));
@@ -54,6 +56,9 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
       : buildQuestionSequence(questions, settings);
     dispatch({ type: 'RESET', questionIds });
   }
+  function exitDrill() {
+    if (window.confirm('ドリルを終了しますか？')) navigate('/');
+  }
   const saveError = saveFailed ? <p role="alert">戦績を保存できませんでした。</p> : null;
   const glossary = useGlossary();
   const id = getCurrentQuestionId(state);
@@ -70,6 +75,11 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (state.phase === 'question') headingRef.current?.focus();
+  }, [state.phase, state.currentIndex]);
+  // On a phone the answer starts below the fold; bring it up when revealed.
+  const answerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (state.phase === 'answer') answerRef.current?.scrollIntoView?.({ block: 'start' });
   }, [state.phase, state.currentIndex]);
   const { remainingMs } = useDrillTimer({
     durationMs,
@@ -136,34 +146,55 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
 
   return (
     <>
-      <h2>{title}</h2>
+      <h2 className={styles.srOnly}>{title}</h2>
       {saveError}
-      <p className={styles.progress} role="status">{getCurrentQuestionNumber(state)} / {total} 問</p>
+      <div className={styles.header}>
+        <button className={styles.quiet} type="button" onClick={exitDrill}>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 4 6 10l6 6" /></svg>
+          終了
+        </button>
+        <p className={styles.progress} role="status">{getCurrentQuestionNumber(state)} / {total} 問</p>
+        <button className={styles.quiet} type="button" onClick={() => setManualPauseKey(manualPaused ? null : resetKey)}>
+          {manualPaused ? '再開' : '一時停止'}
+        </button>
+      </div>
       <DrillTimerBar
         remainingMs={remainingMs}
         durationMs={durationMs}
         manualPaused={manualPaused}
         glossaryOpen={glossaryOpen}
-        onTogglePause={() => setManualPauseKey(manualPaused ? null : resetKey)}
       />
       <article data-question-id={question.id}>
-        <h3 ref={headingRef} tabIndex={-1}>[{question.category}] {question.topic}</h3>
-        <PromptSection question={question} headingLevel={4} className={styles.area} />
+        <h3 className={styles.meta} ref={headingRef} tabIndex={-1}>
+          <b>{question.category}</b> {CATEGORY_LABELS[question.category]}　/　{question.topic}
+        </h3>
+        <PromptSection question={question} headingLevel={4} className={styles.prompt} />
         {state.phase === 'answer' && (
-          <AnswerAndExplanationSections question={question} headingLevel={4} className={styles.area} />
+          <div ref={answerRef} className={styles.answerArea}>
+            <AnswerAndExplanationSections
+              question={question}
+              headingLevel={4}
+              answerClassName={styles.answer}
+              explanationClassName={styles.explanation}
+            />
+          </div>
         )}
       </article>
-      {state.phase === 'answer' && (
-        <RatingButtons onRate={(rating) => {
-          record(question.id, rating);
-          dispatch({ type: 'NEXT' });
-        }} />
-      )}
-      {state.phase === 'question' ? (
-        <button className={styles.action} type="button" onClick={() => dispatch({ type: 'REVEAL_ANSWER' })}>答えを見る</button>
-      ) : (
-        <button className={styles.action} type="button" onClick={() => dispatch({ type: 'NEXT' })}>{isLastQuestion(state) ? '完了' : '次へ'}</button>
-      )}
+      <div className={styles.actions}>
+        {state.phase === 'answer' && (
+          <RatingButtons onRate={(rating) => {
+            record(question.id, rating);
+            dispatch({ type: 'NEXT' });
+          }} />
+        )}
+        {state.phase === 'question' ? (
+          <button className={styles.primary} type="button" onClick={() => dispatch({ type: 'REVEAL_ANSWER' })}>答えを見る</button>
+        ) : (
+          <button className={styles.textAction} type="button" onClick={() => dispatch({ type: 'NEXT' })}>
+            {isLastQuestion(state) ? '評価せずに完了' : '評価せずに次へ'}
+          </button>
+        )}
+      </div>
     </>
   );
 }

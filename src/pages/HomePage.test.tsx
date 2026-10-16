@@ -2,7 +2,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
 import { questions } from '../data/questions';
@@ -58,7 +58,19 @@ describe('Home', () => {
     const bCount = questions.filter((question) => question.category === 'B').length;
     expect(screen.getByRole('status').textContent).toBe(`1 / ${bCount} 問`);
     expect(screen.queryByRole('button', { name: '開始' })).toBeNull();
-    expect(screen.getByRole('article').textContent).toContain('[B]');
+    expect(screen.getByRole('article').textContent).toContain('B 実行順・状態遷移');
+  });
+
+  it('leaves a launched Drill for Home only after confirming 終了', async () => {
+    const user = setup();
+    await user.click(screen.getByRole('link', { name: /^すべて/ }));
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    await user.click(screen.getByRole('button', { name: '終了' }));
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
+    await user.click(screen.getByRole('button', { name: '終了' }));
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('region', { name: 'ドリル' })).not.toBeNull();
+    confirm.mockRestore();
   });
 
   it('restores the last-used settings on the next visit', () => {

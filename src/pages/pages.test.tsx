@@ -219,7 +219,7 @@ describe('Manual Drill', () => {
       expect(card.textContent).toContain(prompt);
       expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
       expect(screen.getByRole('heading', { name: '解説' })).not.toBeNull();
-      await user.click(screen.getByRole('button', { name: number === questions.length ? '完了' : '次へ' }));
+      await user.click(screen.getByRole('button', { name: number === questions.length ? '評価せずに完了' : '評価せずに次へ' }));
     }
     expect(visited).toEqual(questions.map((question) => question.id));
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
@@ -243,7 +243,7 @@ describe('Manual Drill', () => {
     await user.click(within(dialog).getByRole('button', { name: '閉じる' }));
     expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
     expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
-    await user.click(screen.getByRole('button', { name: '次へ' }));
+    await user.click(screen.getByRole('button', { name: '評価せずに次へ' }));
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
   });
 

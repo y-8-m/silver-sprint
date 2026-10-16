@@ -5,18 +5,17 @@ type DrillTimerBarProps = {
   durationMs: number;
   manualPaused: boolean;
   glossaryOpen: boolean;
-  onTogglePause(): void;
 };
 
-export default function DrillTimerBar({ remainingMs, durationMs, manualPaused, glossaryOpen, onTogglePause }: DrillTimerBarProps) {
+const URGENT_SECONDS = 3;
+
+export default function DrillTimerBar({ remainingMs, durationMs, manualPaused, glossaryOpen }: DrillTimerBarProps) {
+  const seconds = Math.ceil(remainingMs / 1000);
   return (
-    <div className={styles.timer}>
-      <span>残り時間: {(remainingMs / 1000).toFixed(1)}秒</span>
-      <progress aria-label="残り時間" max={durationMs} value={remainingMs} />
-      {(manualPaused || glossaryOpen) && <span>一時停止中</span>}
-      <button className={styles.action} type="button" onClick={onTogglePause}>
-        {manualPaused ? '再開' : '一時停止'}
-      </button>
+    <div className={`${styles.timer} ${seconds <= URGENT_SECONDS ? styles.urgent : ''}`}>
+      <span className={styles.seconds}><span className={styles.secondsValue}>{seconds}</span>秒</span>
+      <progress className={styles.bar} aria-label="残り時間" max={durationMs} value={remainingMs} />
+      {(manualPaused || glossaryOpen) && <span className={styles.paused}>一時停止中</span>}
     </div>
   );
 }

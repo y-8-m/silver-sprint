@@ -97,12 +97,12 @@ describe('Drill Rating integration', () => {
     setup(questions.slice(0, 2));
     click('開始');
     click('答えを見る');
-    if (mode === 'manual') click('次へ');
+    if (mode === 'manual') click('評価せずに次へ');
     else advance(10000);
     expect(screen.getByRole('status').textContent).toBe('2 / 2 問');
     expect(repo.load()).toEqual(previous);
     click('答えを見る');
-    if (mode === 'manual') click('完了');
+    if (mode === 'manual') click('評価せずに完了');
     else advance(10000);
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(repo.load()).toEqual(previous);
@@ -324,10 +324,10 @@ describe('Drill Timer integration', () => {
     expect(screen.queryByRole('progressbar')).toBeNull();
     click('開始');
     expect(screen.queryByRole('radio')).toBeNull();
-    expect(screen.getByText('残り時間: 10.0秒')).not.toBeNull();
+    expect(screen.getByText('10', { selector: 'span' })).not.toBeNull();
     advance(10000);
     expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
-    expect(screen.getByText('残り時間: 10.0秒')).not.toBeNull();
+    expect(screen.getByText('10', { selector: 'span' })).not.toBeNull();
     advance(10000);
     expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
@@ -400,7 +400,7 @@ describe('Drill Timer integration', () => {
     advance(1000);
     expect(timer().value).toBe(9000);
     click('一時停止');
-    click('次へ');
+    click('評価せずに次へ');
     expect(timer().value).toBe(10000);
     expect(screen.queryByRole('button', { name: '再開' })).toBeNull();
     advance(10000);
