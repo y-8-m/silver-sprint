@@ -1,0 +1,61 @@
+/* デザイントークン。色は全画面でこの14色だけを使い、近い別値を作らない。 */
+:root {
+  color-scheme: light;
+
+  /* 色 */
+  --color-ground: #f7f7f5; /* 地 */
+  --color-surface: #ffffff; /* 面・白（評価ボタン、キー表記、主ボタンの文字） */
+  --color-text: #1a1d21; /* 文字 */
+  --color-text-2: #454a52; /* 文字2 */
+  --color-text-muted: #5c6169; /* 補助 */
+  --color-line: #d6d8db; /* 罫線 */
+  --color-line-strong: #b9bdc2; /* 罫線・強 */
+  --color-accent: #0e5a8a; /* 主操作 */
+  --color-code-bg: #16191e; /* コード背景 */
+  --color-code-text: #e8eaed; /* コード文字 */
+  --color-surface-subtle: #e8e9eb; /* 薄面（インラインコードの背景） */
+  --color-rating-known: #0b5a31; /* 評価○ */
+  --color-rating-unsure: #7a4100; /* 評価△ */
+  --color-danger: #a3261f; /* 評価×・残り3秒 */
+
+  /* 書体 */
+  --font-sans: 'Noto Sans JP', system-ui, -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* 文字サイズ */
+  --font-size-timer: 1.75rem; /* 28px */
+  --font-size-question: 1.25rem; /* 20px */
+  --font-size-answer: 1.1875rem; /* 19px */
+  --font-size-body: 0.9375rem; /* 15px */
+  --font-size-code: 0.875rem; /* 14px */
+  --font-size-caption: 0.8125rem; /* 13px */
+
+  /* 余白（4px基準） */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --gutter: var(--space-4);
+
+  /* 形 */
+  --radius-sm: 2px; /* コード */
+  --radius-md: 3px; /* ボタン */
+  --border-hairline: 1px solid var(--color-line);
+  --border-strong: 2px solid var(--color-text);
+
+  /* 操作サイズ */
+  --tap-min: 3rem; /* 48px */
+  --button-primary-height: 3.25rem; /* 52px */
+  --content-max-width: 40rem;
+
+  /* 動き */
+  --duration-screen: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-screen: 0ms;
+  }
+}

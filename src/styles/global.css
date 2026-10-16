@@ -1,4 +1,17 @@
+@import './tokens.css';
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  background: var(--color-ground);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+a {
+  color: var(--color-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
