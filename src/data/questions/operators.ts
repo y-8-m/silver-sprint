@@ -110,14 +110,11 @@ export const additionalOperatorQuestions = [
     answer: [code('4:3:3')],
     explanation: [
       { type: 'steps', items: [
-        [code('x = 2'), text('で開始。')],
-        [term('prefixIncrement', '前置インクリメント'), code('++x'), text('は'), code('x'), text('を'), code('3'), text('に更新し、式の値も更新後の'), code('3'), text('になる。')],
-        [code('a'), text('に式の値'), code('3'), text('を代入する。')],
-        [term('postIncrement', '後置インクリメント'), code('x++'), text('は更新前の'), code('3'), text('を式の値とし、'), code('x'), text('を'), code('4'), text('に更新する。')],
-        [code('b'), text('に式の値'), code('3'), text('を代入する。')],
-        [text('最後の状態は'), code('x=4, a=3, b=3'), text('。出力は'), code('4:3:3'), text('。')],
+        [code('x = 2'), text('から開始。'), term('prefixIncrement', '前置インクリメント'), code('++x'), text('は先に'), code('x'), text('を'), code('3'), text('に更新し、'), code('a'), text('に'), code('3'), text('を代入する。')],
+        [term('postIncrement', '後置インクリメント'), code('x++'), text('は更新前の'), code('3'), text('を'), code('b'), text('に代入し、'), code('x'), text('を'), code('4'), text('に更新する。')],
+        [text('最終状態は'), code('x=4, a=3, b=3'), text('。したがって'), code('4:3:3'), text('を出力する。')],
       ] },
-      { type: 'text', content: [text('どちらも変数を1増やすが、代入に使われる式の値が異なる。後置でも、変数の更新を次の文まで待つわけではない。')] },
+      { type: 'text', content: [text('前置と後置の違いは、式の値として更新前・更新後のどちらを使うか。後置でも変数の更新を次の文まで待つわけではない。')] },
     ],
   },
   {
@@ -198,19 +195,11 @@ export const additionalOperatorQuestions = [
     answer: [code('1:false')],
     explanation: [
       { type: 'steps', items: [
-        [text('左辺の'), code('false'), text('を評価する。ここでの'), code('&'), text('はbooleanオペランドに対する論理AND。')],
-        [code('&&'), text('の'), term('shortCircuitEvaluation', '短絡評価'), text('と異なり、右辺'), code('(++n > 0)'), text('も評価する。')],
-        [code('++n'), text('で'), code('n'), text('を'), code('1'), text('に更新する。右辺は'), code('1 > 0'), text('なので'), code('true'), text('。')],
-        [code('false & true'), text('は'), code('false'), text('。'), code('result'), text('に代入し、'), code('1:false'), text('を出力する。')],
+        [code('&'), text('はboolean同士の論理ANDとして働き、左辺が'), code('false'), text('でも右辺を評価する。')],
+        [code('++n'), text('によって'), code('n=1'), text('となり、右辺'), code('1 > 0'), text('は'), code('true'), text('。')],
+        [code('false & true'), text('は'), code('false'), text('。したがって'), code('1:false'), text('を出力する。')],
       ] },
-      { type: 'comparison', columns: [
-        { key: 'expression', label: '式（nの初期値は0）' },
-        { key: 'right', label: '右辺の評価' },
-        { key: 'output', label: '出力' },
-      ], rows: [
-        { id: 'short-circuit', cells: { expression: [code('false && (++n > 0)')], right: [text('省略する')], output: [code('0:false')] } },
-        { id: 'non-short-circuit', highlight: true, cells: { expression: [code('false & (++n > 0)')], right: [text('評価する（nが1になる）')], output: [code('1:false')] } },
-      ] },
+      { type: 'text', content: [code('&&'), text('なら'), term('shortCircuitEvaluation', '短絡評価'), text('により、左辺が'), code('false'), text('の時点で右辺を省略するため、出力は'), code('0:false'), text('になる。')] },
     ],
   },
   {
