@@ -16,7 +16,7 @@ npm run preview
 ```
 
 HashRouterを使用し、`/silver-sprint/#/` はホーム、`#/questions` は問題一覧、`#/glossary` は用語集。
-ホームには問題数・用語数・整合性検証結果を表示する。検証エラー時は各エラーの `path` と `message` を確認でき、両一覧の教材は描画しない。
+ホームは「ドリル」見出しの直下にコース（すべて / A〜D と問題数）を並べ、行を選ぶと設定を保持したまま即座にドリルを開始する（`/drill?course=…&order=…&tempo=…`）。出題順・速度は「出題設定」を開いたときだけ選べ、前回値を `silverSprint:v1:drillPreferences` に保存する。その下に復習・問題一覧・用語集・戦績への行リストと整合性検証結果を表示する。検証エラー時はコース一覧を出さず、各エラーの `path` と `message` を確認でき、両一覧の教材は描画しない。
 問題一覧はcategoryとtopic（categoryを変えたとき、新しいcategoryに存在しないtopicは自動で解除する）、用語集は検索とcategoryでAND条件の絞り込みができる。フィルタはページ内stateのみで、ページを離れるとリセットされる。
 `npm test` は単発実行、`npm run test:watch` は監視実行。
 

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import InvalidContentNotice from '../components/InvalidContentNotice';
 import { AnswerAndExplanationSections, PromptSection } from '../components/QuestionSections';
 import type { Question } from '../data/types';
+import { parseDrillLaunch } from '../drill/drillLaunch';
 import { createInitialDrillState, drillReducer } from '../drill/drillReducer';
 import type { DrillMode } from '../drill/drillTypes';
 import { getCurrentQuestionId, getCurrentQuestionNumber, getTotalQuestions, isLastQuestion } from '../drill/drillSelectors';
@@ -23,15 +25,21 @@ import styles from './DrillPage.module.css';
 
 export default function DrillPage({ mode = 'all', questions, valid, statsRepository }: { mode?: DrillMode; questions: Question[]; valid: boolean; statsRepository?: StatsRepository }) {
   const { stats, record, saveFailed } = useStats(statsRepository);
-  const [settings, setSettings] = useState<SessionSettings>({ course: 'mixed', order: 'sequential' });
+  // A launch from Home (?course=...) fixes the settings and starts at once; read once on mount.
+  const [searchParams] = useSearchParams();
+  const [launch] = useState(() => (mode === 'all' ? parseDrillLaunch(searchParams) : null));
+  const [settings, setSettings] = useState<SessionSettings>(launch?.settings ?? { course: 'mixed', order: 'sequential' });
   const questionsById = useMemo(() => new Map(questions.map((question) => [question.id, question])), [questions]);
   // Only initialization and explicit RESET select a sequence. Rating changes
   // update Stats without removing IDs from the current session snapshot.
-  const [state, dispatch] = useReducer(drillReducer, undefined, () => createInitialDrillState(
-    mode === 'review' ? getWeakQuestionIds(stats, questions) : buildQuestionSequence(questions, settings),
-  ));
+  const [state, dispatch] = useReducer(drillReducer, undefined, () => {
+    const ready = createInitialDrillState(
+      mode === 'review' ? getWeakQuestionIds(stats, questions) : buildQuestionSequence(questions, settings),
+    );
+    return launch ? drillReducer(ready, { type: 'START' }) : ready;
+  });
   const total = getTotalQuestions(state);
-  const [tempo, setTempo] = useState<Tempo>('normal');
+  const [tempo, setTempo] = useState<Tempo>(launch?.tempo ?? 'normal');
   const [manualPauseKey, setManualPauseKey] = useState<string | null>(null);
   const title = mode === 'review' ? '復習' : 'ドリル';
   function changeSessionSettings(next: SessionSettings) {

@@ -178,7 +178,7 @@ describe('Stats Page', () => {
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('button', { name: '戦績をクリア' })).toBeNull();
     fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
-    expect(screen.getByText('教材データ: エラー')).not.toBeNull();
+    expect(screen.getByText('教材データ：エラー')).not.toBeNull();
   });
 
   it('handles corrupt storage with the empty state', () => {

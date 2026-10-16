@@ -20,7 +20,7 @@ export default function AppRoutes({ questions, glossary }: AppRoutesProps) {
     <GlossaryProvider glossary={glossary}>
       <Routes>
         <Route element={<Layout />}>
-          <Route index element={<HomePage questionCount={questions.length} glossaryCount={Object.keys(glossary).length} validation={validation} />} />
+          <Route index element={<HomePage questions={questions} validation={validation} />} />
           <Route path="questions" element={<QuestionListPage questions={questions} valid={validation.valid} />} />
           <Route path="glossary" element={<GlossaryPage glossary={glossary} valid={validation.valid} />} />
           <Route path="drill" element={<DrillPage key="all" mode="all" questions={questions} valid={validation.valid} />} />

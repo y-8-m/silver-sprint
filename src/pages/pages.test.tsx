@@ -26,7 +26,10 @@ beforeAll(() => {
     },
   });
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
 afterAll(() => {
   for (const [name, descriptor] of [['showModal', originalShow], ['close', originalClose]] as const) {
     if (descriptor) Object.defineProperty(HTMLDialogElement.prototype, name, descriptor);
@@ -47,9 +50,7 @@ function setup(path = '/', data: { questions?: Question[]; glossary?: GlossaryDi
 describe('Pages and routing', () => {
   it('navigates Home, Questions, Glossary, and Drill with a current-page indicator', async () => {
     const { user } = setup();
-    expect(screen.getByText(`問題数: ${questions.length}`)).not.toBeNull();
-    expect(screen.getByText(`用語数: ${Object.keys(glossary).length}`)).not.toBeNull();
-    expect(screen.getByText('教材データ: OK')).not.toBeNull();
+    expect(screen.getByText('教材データ：問題なし')).not.toBeNull();
     expect(screen.queryByRole('article')).toBeNull();
     const nav = within(screen.getByRole('navigation'));
     expect(nav.getByRole('link', { name: 'ホーム' }).getAttribute('aria-current')).toBe('page');
@@ -194,7 +195,7 @@ describe('Pages and routing', () => {
     expect(screen.getByRole('alert').textContent).toContain('教材データにエラー');
     expect(screen.queryByRole('article')).toBeNull();
     await user.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
-    expect(screen.getByText('教材データ: エラー')).not.toBeNull();
+    expect(screen.getByText('教材データ：エラー')).not.toBeNull();
     expect(screen.getByText(`questions[${questions.length}].id`)).not.toBeNull();
     expect(screen.getByText(/Question ID .* is duplicated/)).not.toBeNull();
   });
