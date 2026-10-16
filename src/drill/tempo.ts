@@ -11,7 +11,7 @@ export const TEMPO_CONFIG = {
 
 export function getPhaseDurationMs(tempo: Tempo, phase: TimedPhase, timeWeight = 1): number {
   const duration = TEMPO_CONFIG[tempo][phase] * timeWeight;
-  // Invalid weights are not yet rejected by the content validator. Fall back
-  // to the base duration rather than immediately skipping or stalling a phase.
+  // The content validator rejects invalid weights; this guard only keeps an
+  // unvalidated value from immediately skipping or stalling a phase.
   return Number.isFinite(duration) && duration > 0 ? duration : TEMPO_CONFIG[tempo][phase];
 }

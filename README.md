@@ -35,6 +35,7 @@ src/
 │  ├ PlainInlineRenderer.tsx
 │  ├ InvalidContentNotice.tsx
 │  ├ QuestionPreview.tsx
+│  ├ QuestionSections.tsx（QuestionPreviewとDrillで共用）
 │  ├ QuestionPreview.module.css
 │  ├ renderers.test.tsx
 │  └ blocks/
@@ -212,8 +213,8 @@ Java SE 17の言語仕様に合わせて記述。
 
 `vite.config.ts` の `base` はリポジトリ名に合わせて `/silver-sprint/`。
 `npm run build` が生成する `dist/` を公開対象にできる。
-`.github/workflows/deploy.yml` が `main` へのpushまたはActions画面からの手動実行で、Node.js 24上の `npm ci`・`npm test`・`npm run build` を実行する。
-すべて成功したら `dist/` をGitHub Pagesへ公開する。公開対象は `main` のみ。
+`.github/workflows/deploy.yml` が `main` へのpush・`main` 向けのPull Request・Actions画面からの手動実行で、Node.js 24上の `npm ci`・`npm test`・`npm run build` を実行する。
+すべて成功したら `dist/` をGitHub Pagesへ公開する。公開（deployジョブ）は `main` のみで、Pull Requestではテストとビルドの確認だけを行う。
 
 初回はリポジトリの **Settings → Pages → Build and deployment → Source** を **GitHub Actions** に設定する。
 自己評価の戦績はlocalStorageへ保存する。

@@ -34,7 +34,7 @@ export const additionalOperatorQuestions = [
     answer: [text('コンパイルエラー。')],
     explanation: [
       { type: 'text', content: [code('var'), text('による'), term('localVariableTypeInference', 'ローカル変数の型推論'), text('には初期化式が必要。この宣言には初期化式がなく、推論する型を決定できない。')] },
-      { type: 'text', content: [code('int value;'), text('のように型を明示した宣言は可能だが、'), code('var value;'), text('は宣言自体が認められない。値を読む前の「確実な代入」以前の宣言規則によるエラーで、実行には進まない。')] },
+      { type: 'text', content: [code('int value;'), text('のように型を明示した宣言は可能だが、'), code('var value;'), text('は初期化式がないため宣言自体が認められない。値を読む前の代入チェックとは別の、宣言そのもののエラーで、実行には進まない。')] },
     ],
   },
   {

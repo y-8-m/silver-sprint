@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import BlockRenderer from '../components/blocks/BlockRenderer';
-import InlineRenderer from '../components/InlineRenderer';
 import InvalidContentNotice from '../components/InvalidContentNotice';
+import { AnswerAndExplanationSections, PromptSection } from '../components/QuestionSections';
 import type { Question } from '../data/types';
 import { createInitialDrillState, drillReducer } from '../drill/drillReducer';
 import type { DrillMode } from '../drill/drillTypes';
@@ -141,21 +140,9 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
       />
       <article data-question-id={question.id}>
         <h3 ref={headingRef} tabIndex={-1}>[{question.category}] {question.topic}</h3>
-        <section className={styles.area}>
-          <h4>問題</h4>
-          {question.prompt.map((block, index) => <BlockRenderer block={block} key={index} />)}
-        </section>
+        <PromptSection question={question} headingLevel={4} className={styles.area} />
         {state.phase === 'answer' && (
-          <>
-            <section className={styles.area}>
-              <h4>答え</h4>
-              <p><InlineRenderer nodes={question.answer} /></p>
-            </section>
-            <section className={styles.area}>
-              <h4>解説</h4>
-              {question.explanation.map((block, index) => <BlockRenderer block={block} key={index} />)}
-            </section>
-          </>
+          <AnswerAndExplanationSections question={question} headingLevel={4} className={styles.area} />
         )}
       </article>
       {state.phase === 'answer' && (

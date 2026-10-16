@@ -50,7 +50,7 @@ export function getStatsSummary(stats: Stats, questions: Question[]): StatsSumma
   };
 }
 
-// Material order; these IDs can also supply a future Review Drill sequence.
+// Material order; these IDs are the Review Drill sequence.
 export function getWeakQuestionIds(stats: Stats, questions: Question[]): string[] {
   return getWeakQuestionStats(stats, questions).map((view) => view.questionId);
 }
