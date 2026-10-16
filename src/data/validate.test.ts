@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { glossary } from './glossary';
 import { term, text } from './helpers';
 import { questions } from './questions';
+import { additionalOperatorQuestions } from './questions/operators';
 import type { ComparisonBlock, GlossaryDictionary, Question } from './types';
 import { validateContent } from './validate';
 
@@ -40,9 +41,9 @@ const knownGlossary = {
 const missingReference = term('missing', '存在しない用語');
 
 describe('validateContent', () => {
-  it('accepts all sixteen questions and nine glossary entries', () => {
-    expect(questions).toHaveLength(16);
-    expect(Object.keys(glossary)).toHaveLength(9);
+  it('accepts all thirty questions and seventeen glossary entries with valid glossary references', () => {
+    expect(questions).toHaveLength(30);
+    expect(Object.keys(glossary)).toHaveLength(17);
     expect(validateContent(questions, glossary)).toEqual({ valid: true, issues: [] });
   });
 
@@ -58,8 +59,65 @@ describe('validateContent', () => {
     expect(Object.fromEntries(['A', 'B', 'C', 'D'].map((category) => [
       category, unit.filter((question) => question.category === category).length,
     ]))).toEqual({ A: 1, B: 3, C: 7, D: 1 });
-    expect(questions.filter((question) => !unitIds.has(question.id)).map((question) => question.id)).toEqual([
+    expect(questions.slice(0, 16).filter((question) => !unitIds.has(question.id)).map((question) => question.id)).toEqual([
       'post-increment-output', 'inheritance-multiplicity', 'reference-variable-value', 'constructor-call-chain',
+    ]);
+  });
+
+  it('appends all fourteen operator questions with the intended IDs and categories', () => {
+    expect(additionalOperatorQuestions.map(({ id, category }) => [id, category])).toEqual([
+      ['var-type-inference', 'A'],
+      ['var-requires-initializer', 'C'],
+      ['var-reassignment-type', 'C'],
+      ['integer-division-before-assignment', 'B'],
+      ['remainder-negative-dividend', 'B'],
+      ['operator-precedence-multiplication', 'B'],
+      ['prefix-postfix-increment-comparison', 'B'],
+      ['short-addition-promotion', 'C'],
+      ['short-compound-assignment', 'C'],
+      ['double-to-int-cast', 'C'],
+      ['short-circuit-and', 'B'],
+      ['boolean-and-non-short-circuit', 'B'],
+      ['short-circuit-or', 'B'],
+      ['conditional-operator-evaluation', 'B'],
+    ]);
+    expect(questions.slice(16)).toEqual(additionalOperatorQuestions);
+    expect(new Set(questions.map(({ id }) => id)).size).toBe(30);
+    expect(Object.fromEntries(['A', 'B', 'C', 'D'].map((category) => [
+      category, additionalOperatorQuestions.filter((question) => question.category === category).length,
+    ]))).toEqual({ A: 1, B: 8, C: 5, D: 0 });
+  });
+
+  it('preserves the IDs and order of the original sixteen questions', () => {
+    expect(questions.slice(0, 16).map(({ id }) => id)).toEqual([
+      'local-variable-initialization', 'post-increment-output', 'inheritance-multiplicity',
+      'reference-variable-value', 'constructor-call-chain', 'primitive-reference-kind',
+      'primitive-types', 'byte-constant-assignment', 'float-literal-assignment',
+      'definite-assignment-if', 'definite-assignment-if-else', 'block-scope',
+      'for-variable-scope', 'declaration-initializer-scope', 'primitive-copy', 'final-local-variable',
+    ]);
+  });
+
+  it('sets timeWeight only on the five specified operator questions', () => {
+    const weightedIds = new Set([
+      'prefix-postfix-increment-comparison', 'short-circuit-and',
+      'boolean-and-non-short-circuit', 'short-circuit-or', 'conditional-operator-evaluation',
+    ]);
+    for (const question of additionalOperatorQuestions) {
+      expect(question.timeWeight, question.id).toBe(weightedIds.has(question.id) ? 1.5 : undefined);
+    }
+  });
+
+  it('adds the eight operator glossary entries with the intended Japanese terms and categories', () => {
+    expect(Object.entries(glossary).slice(9).map(([id, { term, category }]) => [id, term, category])).toEqual([
+      ['localVariableTypeInference', 'ローカル変数の型推論', '変数'],
+      ['remainderOperator', '剰余演算子', '演算子'],
+      ['prefixIncrement', '前置インクリメント', '演算子'],
+      ['binaryNumericPromotion', '二項数値昇格', '型'],
+      ['compoundAssignment', '複合代入演算子', '演算子'],
+      ['explicitCast', 'キャスト', '型'],
+      ['shortCircuitEvaluation', '短絡評価', '演算子'],
+      ['conditionalOperator', '条件演算子', '演算子'],
     ]);
   });
 

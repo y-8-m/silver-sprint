@@ -118,7 +118,7 @@ describe('Content preview', () => {
     expect(html.match(/<h3>解説<\/h3>/g)).toHaveLength(questions.length);
     questions.forEach((question) => {
       expect(html).toContain(`data-question-id="${question.id}"`);
-      expect(html).toContain(`<h2>[${question.category}] ${question.topic}</h2>`);
+      expect(html).toContain(renderToStaticMarkup(<h2>[{question.category}] {question.topic}</h2>));
     });
     expect(html).toContain('2:1</code>');
     expect(html).toContain('PCD</code>');

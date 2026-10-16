@@ -132,15 +132,15 @@ describe('Pages and routing', () => {
   });
 
   it.each([
-    ['term', '後置インクリメント', 'postIncrement'],
-    ['category', '演算子', 'postIncrement'],
-    ['short', '式の値', 'postIncrement'],
-    ['inline code ignoring case', 'NULL', 'reference'],
-  ])('searches glossary %s', async (_field, query, id) => {
+    ['term', '後置インクリメント', ['postIncrement']],
+    ['category', '演算子', ['postIncrement', 'remainderOperator', 'prefixIncrement', 'compoundAssignment', 'shortCircuitEvaluation', 'conditionalOperator']],
+    ['short', '式の値', ['postIncrement', 'prefixIncrement']],
+    ['inline code ignoring case', 'NULL', ['reference']],
+  ] as const)('searches glossary %s', async (_field, query, ids) => {
     const { user } = setup('/glossary');
     await user.type(screen.getByLabelText('用語検索'), query);
-    expect(screen.getByRole('status').textContent).toBe(`1 / ${Object.keys(glossary).length} 語`);
-    expect(screen.getByRole('article').getAttribute('data-glossary-entry-id')).toBe(id);
+    expect(screen.getByRole('status').textContent).toBe(`${ids.length} / ${Object.keys(glossary).length} 語`);
+    expect(screen.getAllByRole('article').map((article) => article.getAttribute('data-glossary-entry-id')).sort()).toEqual([...ids].sort());
   });
 
   it('searches the displayed text of glossary references inside short', async () => {
@@ -158,11 +158,11 @@ describe('Pages and routing', () => {
     await user.selectOptions(screen.getByLabelText('カテゴリ'), '変数');
     expect(screen.getByRole('status').textContent).toBe(`${Object.values(glossary).filter((entry) => entry.category === '変数').length} / ${Object.keys(glossary).length} 語`);
     await user.type(screen.getByLabelText('用語検索'), 'ローカル');
-    expect(screen.getByRole('status').textContent).toBe(`1 / ${Object.keys(glossary).length} 語`);
+    expect(screen.getByRole('status').textContent).toBe(`2 / ${Object.keys(glossary).length} 語`);
     await user.selectOptions(screen.getByLabelText('カテゴリ'), '演算子');
     expect(screen.getByText('条件に一致する用語はありません。')).not.toBeNull();
     await user.clear(screen.getByLabelText('用語検索'));
-    expect(screen.getByRole('status').textContent).toBe(`1 / ${Object.keys(glossary).length} 語`);
+    expect(screen.getByRole('status').textContent).toBe(`6 / ${Object.keys(glossary).length} 語`);
     await user.type(screen.getByLabelText('用語検索'), '存在しない検索文字列');
     expect(screen.getByRole('status').textContent).toBe(`0 / ${Object.keys(glossary).length} 語`);
     expect(screen.getByText('条件に一致する用語はありません。')).not.toBeNull();
