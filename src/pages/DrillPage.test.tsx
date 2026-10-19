@@ -191,6 +191,62 @@ function timer() {
   return screen.getByRole('progressbar', { name: '残り時間' }) as HTMLProgressElement;
 }
 
+describe('Drill bottom controller', () => {
+  it.each(['/drill', '/review'])('keeps %s controls together and ratings unavailable until the answer', (path) => {
+    const repository = createLocalStorageStatsRepository(window.localStorage);
+    repository.save({ questions: Object.fromEntries(questions.slice(0, 2).map((question) => [question.id, {
+      knownCount: 0, unsureCount: 0, unknownCount: 1,
+      lastRating: 'unknown', lastAnsweredAt: '2026-10-15T00:00:00Z',
+    }])) });
+    setup(questions.slice(0, 2), path);
+    expect(screen.queryByRole('region', { name: 'ドリル操作' })).toBeNull();
+    click('開始');
+    const controllerElement = screen.getByRole('region', { name: 'ドリル操作' });
+    const controller = within(controllerElement);
+    const header = within(screen.getByRole('button', { name: '終了' }).parentElement!);
+    expect(header.getAllByRole('button')).toHaveLength(2);
+    expect(header.getByRole('button', { name: '使い方' })).not.toBeNull();
+    expect(header.queryByRole('status')).toBeNull();
+    expect(controller.getByRole('status').textContent).toBe('1 / 2 問');
+    expect(controller.getByText('問題表示中')).not.toBeNull();
+    expect(controller.getByText('Silver Sprint').tagName).toBe('P');
+    expect(controller.getAllByRole('button')).toHaveLength(2);
+    expect(controller.queryByRole('group', { name: '理解度' })).toBeNull();
+    const reservedRatings = controllerElement.querySelector('fieldset')!;
+    const hiddenButtons = [...reservedRatings.querySelectorAll('button')];
+    expect(hiddenButtons).toHaveLength(3);
+    const pause = controller.getByRole('button', { name: '一時停止' });
+    pause.focus();
+    const previousStats = repository.load();
+    for (const button of hiddenButtons) {
+      expect(button.disabled).toBe(true);
+      button.focus();
+      expect(document.activeElement).toBe(pause);
+      fireEvent.click(button);
+    }
+    expect(repository.load()).toEqual(previousStats);
+    advance(2100);
+    expect(controller.getByText('08').parentElement?.textContent).toBe('残り08秒');
+    click('一時停止');
+    expect(controller.getByRole('button', { name: '再開' })).not.toBeNull();
+    advance(20000);
+    expect(timer().value).toBe(7900);
+    click('答えを見る');
+    expect(controller.getByText('解説表示中')).not.toBeNull();
+    expect(controller.getByRole('group', { name: '理解度' })).toBe(reservedRatings);
+    expect(controller.getAllByRole('button')).toHaveLength(5);
+    expect(hiddenButtons.every((button) => !button.disabled)).toBe(true);
+    click('△ 怪しい');
+    expect(controller.getByRole('status').textContent).toBe('2 / 2 問');
+    expect(repository.load().questions[questions[0]!.id]?.lastRating).toBe('unsure');
+    expect(controller.queryByRole('group', { name: '理解度' })).toBeNull();
+    click('答えを見る');
+    click('評価せずに完了');
+    expect(screen.queryByRole('region', { name: 'ドリル操作' })).toBeNull();
+    expect(screen.getByRole('heading', { name: path === '/review' ? '復習完了' : 'ドリル完了' })).not.toBeNull();
+  });
+});
+
 describe('Drill Course / Order integration', () => {
   function select(name: string) {
     fireEvent.click(screen.getByRole('radio', { name }));

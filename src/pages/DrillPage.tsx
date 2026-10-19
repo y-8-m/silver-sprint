@@ -22,10 +22,9 @@ import type { Rating } from '../stats/statsTypes';
 import type { StatsRepository } from '../stats/statsRepository';
 import { useStats } from '../stats/useStats';
 import { getWeakQuestionIds } from '../stats/statsSelectors';
-import DrillTimerBar from './drill/DrillTimerBar';
+import DrillController from './drill/DrillController';
 import CourseSelector from './drill/CourseSelector';
 import OrderSelector from './drill/OrderSelector';
-import RatingButtons from './drill/RatingButtons';
 import TempoSelector from './drill/TempoSelector';
 import styles from './DrillPage.module.css';
 
@@ -78,7 +77,7 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   const helpOpen = useHelp()?.open ?? false;
   const overlayOpen = glossaryOpen || helpOpen;
   useEffect(() => setManualPauseKey(null), [resetKey]);
-  // Rating buttons unmount on advance; move focus to the new question instead of dropping it to <body>.
+  // On advance, move focus to the new question when the rating controls become unavailable.
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (state.phase === 'question') headingRef.current?.focus();
@@ -171,56 +170,47 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   }
 
   return (
-    <>
+    <div className={styles.session}>
       <h2 className={styles.srOnly}>{title}</h2>
-      {saveError}
       <div className={styles.header}>
         <button className={styles.quiet} type="button" onClick={exitDrill}>
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 4 6 10l6 6" /></svg>
           終了
         </button>
-        <p className={styles.progress} role="status">{getCurrentQuestionNumber(state)} / {total} 問</p>
-        <div className={styles.headerEnd}>
-          <button className={styles.quiet} type="button" onClick={() => setManualPauseKey(manualPaused ? null : resetKey)}>
-            {manualPaused ? '再開' : '一時停止'}
-          </button>
-          <HelpButton variant="icon" className={styles.helpButton} />
-        </div>
+        <HelpButton variant="icon" className={styles.helpButton} />
       </div>
-      <DrillTimerBar
+      <div className={styles.scrollArea} role="region" aria-label="問題・解説" tabIndex={0}>
+        {saveError}
+        <article data-question-id={question.id}>
+          <h3 className={styles.meta} ref={headingRef} tabIndex={-1}>
+            <b>{question.category}</b> {CATEGORY_LABELS[question.category]}　/　{question.topic}
+          </h3>
+          <PromptSection question={question} headingLevel={4} className={styles.prompt} />
+          {state.phase === 'answer' && (
+            <div ref={answerRef} className={styles.answerArea}>
+              <AnswerAndExplanationSections
+                question={question}
+                headingLevel={4}
+                answerClassName={styles.answer}
+                explanationClassName={styles.explanation}
+              />
+            </div>
+          )}
+        </article>
+      </div>
+      <DrillController
+        answering={state.phase === 'answer'}
+        lastQuestion={isLastQuestion(state)}
+        current={getCurrentQuestionNumber(state)}
+        total={total}
         remainingMs={remainingMs}
         durationMs={durationMs}
         manualPaused={manualPaused}
         overlayOpen={overlayOpen}
+        onTogglePause={() => setManualPauseKey(manualPaused ? null : resetKey)}
+        onNext={() => dispatch({ type: state.phase === 'question' ? 'REVEAL_ANSWER' : 'NEXT' })}
+        onRate={rateCurrent}
       />
-      <article data-question-id={question.id}>
-        <h3 className={styles.meta} ref={headingRef} tabIndex={-1}>
-          <b>{question.category}</b> {CATEGORY_LABELS[question.category]}　/　{question.topic}
-        </h3>
-        <PromptSection question={question} headingLevel={4} className={styles.prompt} />
-        {state.phase === 'answer' && (
-          <div ref={answerRef} className={styles.answerArea}>
-            <AnswerAndExplanationSections
-              question={question}
-              headingLevel={4}
-              answerClassName={styles.answer}
-              explanationClassName={styles.explanation}
-            />
-          </div>
-        )}
-      </article>
-      <div className={styles.actions}>
-        {state.phase === 'answer' && (
-          <RatingButtons onRate={rateCurrent} />
-        )}
-        {state.phase === 'question' ? (
-          <button className={styles.primary} type="button" onClick={() => dispatch({ type: 'REVEAL_ANSWER' })}>答えを見る</button>
-        ) : (
-          <button className={styles.textAction} type="button" onClick={() => dispatch({ type: 'NEXT' })}>
-            {isLastQuestion(state) ? '評価せずに完了' : '評価せずに次へ'}
-          </button>
-        )}
-      </div>
-    </>
+    </div>
   );
 }

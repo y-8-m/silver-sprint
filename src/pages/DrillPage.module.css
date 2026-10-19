@@ -9,19 +9,47 @@
   white-space: nowrap;
 }
 
-/* 出題・答え画面のヘッダー：終了 / 進捗 / 一時停止 */
+/* 実行中だけ画面を占有し、本文とコントローラーを別の領域にする。 */
+.session {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-ground);
+}
+
+.header,
+.scrollArea,
+.controller {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 60rem;
+  margin-inline: auto;
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+
 .header {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  padding-top: max(var(--space-2), env(safe-area-inset-top, 0px));
+  padding-bottom: var(--space-2);
 }
 
-.progress {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.scrollArea {
+  flex: 1 1 0;
+  min-height: 3rem;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding-top: var(--space-2);
+  /* 最後の行も、重ねたグラデーションより上までスクロールできる。 */
+  padding-bottom: calc(3rem + var(--space-4));
+  scroll-padding-top: var(--space-2);
 }
 
 .quiet {
@@ -39,46 +67,115 @@
   cursor: pointer;
 }
 
-.quiet:last-child {
-  justify-content: flex-end;
-}
-
-.headerEnd {
-  display: flex;
-  align-items: center;
-}
-
 .helpButton {
-  width: 2.75rem;
+  width: var(--tap-min);
 }
 
-/* 残り時間：整数秒と4pxの細いバー。残り3秒だけ色を変える */
-.timer {
+/* 操作部分は不透明。本文に重なる上端だけを透明にする。 */
+.controllerShell {
+  position: relative;
+  flex: 0 1 auto;
   display: flex;
+  min-height: 0;
+  background: var(--color-ground);
+}
+
+.controllerShell::before {
+  position: absolute;
+  inset: -3rem 0 auto;
+  height: 3rem;
+  background: linear-gradient(to bottom, transparent, var(--color-ground));
+  pointer-events: none;
+  content: '';
+}
+
+.controllerScroll {
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.controller {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+}
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  padding-bottom: var(--space-3);
+}
+
+.playPause,
+.next {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.playPause {
+  width: 72px;
+  height: 72px;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.next {
+  width: 48px;
+  height: 48px;
+}
+
+.progress {
+  margin: 0 0 0 auto;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 4pxの残り時間バー。残り3秒だけ色を変える。 */
+.timer {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.timeLabels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
 }
 
 .seconds {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 2px;
-  min-width: 2.75rem;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .secondsValue {
   color: var(--color-text);
-  font-size: var(--font-size-timer);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  line-height: 1;
 }
 
 .bar {
-  flex: 1;
+  display: block;
+  width: 100%;
   min-width: 0;
   height: 4px;
   border: 0;
@@ -111,10 +208,32 @@
   background: var(--color-danger);
 }
 
+.pauseStatus {
+  flex: none;
+  width: 5em;
+  min-height: 1.5em;
+  text-align: center;
+}
+
 .paused {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
   white-space: nowrap;
+}
+
+.ratingSlot {
+  min-height: 6.5rem;
+}
+
+/* 同じ内容で寸法を確保し、文字拡大・折り返しにも追従する。 */
+.reservedRatings {
+  visibility: hidden;
+}
+
+.brand {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 /* 問題 */
@@ -187,20 +306,6 @@
   color: var(--color-text-muted);
 }
 
-/* 下部の操作：主操作は1つ、副操作は文字リンク */
-.actions {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-inline: calc(var(--gutter) * -1);
-  padding: var(--space-3) var(--gutter) var(--space-4);
-  border-top: var(--border-hairline);
-  background: var(--color-ground);
-}
-
-.primary,
 .action {
   box-sizing: border-box;
   width: 100%;
@@ -216,7 +321,6 @@
   cursor: pointer;
 }
 
-.primary:disabled,
 .action:disabled {
   background: var(--color-line-strong);
   cursor: not-allowed;
@@ -226,22 +330,11 @@
   margin-block: var(--space-4);
 }
 
-.textAction {
-  min-height: 2.75rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-text-2);
-  font: inherit;
-  font-size: 0.875rem;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
 /* 自己評価：3列。記号・文言・色で区別する */
 .ratings {
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5rem), 1fr));
   gap: var(--space-2);
   margin: 0;
   padding: 0;
@@ -258,6 +351,8 @@
 }
 
 .rating {
+  min-width: 0;
+  overflow-wrap: anywhere;
   min-height: 4rem;
   padding: var(--space-2);
   border: 1px solid var(--color-line-strong);
