@@ -81,7 +81,7 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
         <div className={styles.sectionHeader}>
           <h2 id="home-review" className={styles.heading}>復習</h2>
         </div>
-        <ul className={`${styles.rows} ${styles.strong}`}>
+        <ul className={styles.rows}>
           <li>
             <Link className={styles.row} to="/review">
               <span>△ 怪しい／× 分からなかった の問題</span>
@@ -93,14 +93,18 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
 
       <div className={styles.references}>
         <section aria-labelledby="home-lookup">
-          <h2 id="home-lookup" className={styles.subheading}>調べる</h2>
+          <div className={styles.sectionHeader}>
+            <h2 id="home-lookup" className={styles.heading}>調べる</h2>
+          </div>
           <ul className={styles.rows}>
             <li><Link className={styles.row} to="/questions">問題一覧</Link></li>
             <li><Link className={styles.row} to="/glossary">用語集</Link></li>
           </ul>
         </section>
         <section aria-labelledby="home-reflect">
-          <h2 id="home-reflect" className={styles.subheading}>振り返る</h2>
+          <div className={styles.sectionHeader}>
+            <h2 id="home-reflect" className={styles.heading}>振り返る</h2>
+          </div>
           <ul className={styles.rows}>
             <li><Link className={styles.row} to="/stats">戦績</Link></li>
           </ul>
