@@ -44,50 +44,51 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
 
   return (
     <>
-      <section aria-labelledby="home-learn" className={styles.learn}>
-        <h2 id="home-learn" className={styles.heading}>学ぶ</h2>
-        {validation.valid && (
-          <section aria-labelledby="home-drill">
-            <div className={styles.sectionHeader}>
-              <h3 id="home-drill">ドリル</h3>
-              <button
-                className={styles.settingsToggle}
-                type="button"
-                aria-expanded={settingsOpen}
-                aria-controls={settingsId}
-                onClick={() => setSettingsOpen(!settingsOpen)}
-              >
-                出題設定　{ORDER_SUMMARY[preferences.order]} · {TEMPO_SUMMARY[preferences.tempo]}
-              </button>
-            </div>
-            <div id={settingsId} hidden={!settingsOpen}>
-              <OrderSelector order={preferences.order} onChange={(order) => changePreferences({ ...preferences, order })} />
-              <TempoSelector tempo={preferences.tempo} onChange={(tempo) => changePreferences({ ...preferences, tempo })} />
-            </div>
-            <ul className={`${styles.rows} ${styles.strong}`}>
-              {courses.map(({ course, key, label, count }) => (
-                <li key={key}>
-                  <Link className={styles.row} to={buildDrillPath(course, preferences)}>
-                    <span>
-                      {course !== 'mixed' && <span className={styles.key}>{course}</span>}
-                      {label}
-                    </span>
-                    <span className={styles.meta}>{count} 問</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-        <section aria-labelledby="home-review" className={styles.review}>
-          <Link className={styles.row} to="/review">
-            <div>
-              <h3 id="home-review">復習</h3>
-              <span className={styles.note}>△ 怪しい／× 分からなかった の問題を解き直す</span>
-            </div>
-            <span className={styles.meta}>{weakCount} 問</span>
-          </Link>
+      {validation.valid && (
+        <section aria-labelledby="home-drill" className={styles.primarySection}>
+          <div className={styles.sectionHeader}>
+            <h2 id="home-drill" className={styles.heading}>ドリル</h2>
+            <button
+              className={styles.settingsToggle}
+              type="button"
+              aria-expanded={settingsOpen}
+              aria-controls={settingsId}
+              onClick={() => setSettingsOpen(!settingsOpen)}
+            >
+              出題設定　{ORDER_SUMMARY[preferences.order]} · {TEMPO_SUMMARY[preferences.tempo]}
+            </button>
+          </div>
+          <div id={settingsId} hidden={!settingsOpen}>
+            <OrderSelector order={preferences.order} onChange={(order) => changePreferences({ ...preferences, order })} />
+            <TempoSelector tempo={preferences.tempo} onChange={(tempo) => changePreferences({ ...preferences, tempo })} />
+          </div>
+          <ul className={`${styles.rows} ${styles.courses}`}>
+            {courses.map(({ course, key, label, count }) => (
+              <li key={key}>
+                <Link className={`${styles.row} ${styles.courseRow}`} to={buildDrillPath(course, preferences)}>
+                  <span className={styles.courseLabel}>
+                    {course !== 'mixed' && <span className={styles.key}>{course}</span>}
+                    <span className={styles.courseName}>{label}</span>
+                  </span>
+                  <span className={styles.meta}>{count} 問</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
+      )}
+      <section aria-labelledby="home-review" className={styles.primarySection}>
+        <div className={styles.sectionHeader}>
+          <h2 id="home-review" className={styles.heading}>復習</h2>
+        </div>
+        <ul className={`${styles.rows} ${styles.strong}`}>
+          <li>
+            <Link className={styles.row} to="/review">
+              <span>△ 怪しい／× 分からなかった の問題を解き直す</span>
+              <span className={styles.meta}>{weakCount} 問</span>
+            </Link>
+          </li>
+        </ul>
       </section>
 
       <div className={styles.references}>

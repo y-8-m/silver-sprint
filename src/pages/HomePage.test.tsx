@@ -50,15 +50,19 @@ describe('Home', () => {
     expect(JSON.parse(window.localStorage.getItem(DRILL_PREFERENCES_STORAGE_KEY)!)).toEqual({ order: 'random', tempo: 'fast' });
   });
 
-  it('starts the Drill immediately from a course row with the saved settings', async () => {
+  it.each(['mixed', 'A', 'B', 'C', 'D'] as const)('starts course %s immediately with the saved settings', async (course) => {
     const user = setup();
     await user.click(screen.getByRole('button', { name: /出題設定/ }));
     await user.click(screen.getByRole('radio', { name: 'ゆっくり' }));
-    await user.click(screen.getByRole('link', { name: /実行順・状態遷移/ }));
-    const bCount = questions.filter((question) => question.category === 'B').length;
-    expect(screen.getByRole('status').textContent).toBe(`1 / ${bCount} 問`);
+    await user.click(screen.getByRole('radio', { name: 'ランダム' }));
+    const links = within(screen.getByRole('region', { name: 'ドリル' })).getAllByRole('link');
+    const link = links[course === 'mixed' ? 0 : ['A', 'B', 'C', 'D'].indexOf(course) + 1]!;
+    expect(link.getAttribute('href')).toBe(`/drill?course=${course}&order=random&tempo=slow`);
+    await user.click(link);
+    const matching = course === 'mixed' ? questions : questions.filter((question) => question.category === course);
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${matching.length} 問`);
     expect(screen.queryByRole('button', { name: '開始' })).toBeNull();
-    expect(screen.getByRole('article').textContent).toContain('B 実行順・状態遷移');
+    expect(matching.some((question) => question.id === screen.getByRole('article').getAttribute('data-question-id'))).toBe(true);
   });
 
   it('leaves a launched Drill for Home only after confirming 終了', async () => {
@@ -79,7 +83,7 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: /出題設定/ }).textContent).toContain('ランダム · ゆっくり');
   });
 
-  it('shows the Home brand, help and three purpose-based sections without navigation', () => {
+  it('shows four independent h2 sections and keeps the Home brand and help', () => {
     setup();
     const header = within(screen.getByRole('banner'));
     expect(header.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
@@ -87,9 +91,14 @@ describe('Home', () => {
     expect(header.getByRole('button', { name: '使い方' }).textContent).toBe('使い方');
     expect(header.queryByRole('link')).toBeNull();
     expect(screen.queryByRole('navigation')).toBeNull();
-    const learn = within(screen.getByRole('region', { name: '学ぶ' }));
-    expect(learn.getByRole('region', { name: 'ドリル' })).not.toBeNull();
-    expect(learn.getByRole('region', { name: '復習' })).not.toBeNull();
+    expect(screen.queryByRole('heading', { name: '学ぶ' })).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual(['ドリル', '復習', '調べる', '振り返る']);
+    const drill = screen.getByRole('region', { name: 'ドリル' });
+    const review = screen.getByRole('region', { name: '復習' });
+    expect(drill.parentElement).toBe(screen.getByRole('main'));
+    expect(review.parentElement).toBe(screen.getByRole('main'));
+    expect(within(review).getByRole('heading', { name: '復習', level: 2 }).closest('a')).toBeNull();
+    expect(within(review).getByRole('link', { name: /問題を解き直す/ }).getAttribute('href')).toBe('/review');
     const lookup = within(screen.getByRole('region', { name: '調べる' }));
     expect(lookup.getByRole('link', { name: '問題一覧' }).getAttribute('href')).toBe('/questions');
     expect(lookup.getByRole('link', { name: '用語集' }).getAttribute('href')).toBe('/glossary');
@@ -99,7 +108,7 @@ describe('Home', () => {
 
   it.each([
     ['問題一覧', '問題一覧'], ['用語集', '用語集'], ['戦績', '戦績'],
-    [/^復習/, '復習'],
+    [/問題を解き直す/, '復習'],
   ])('navigates from the Home row %s', async (name, title) => {
     const user = setup();
     await user.click(screen.getByRole('link', { name }));
