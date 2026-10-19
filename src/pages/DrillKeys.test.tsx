@@ -114,28 +114,36 @@ describe('Drill key operations', () => {
 describe('Drill immersive mode', () => {
   it('hides the app header and navigation during a session and shows them again when finished', () => {
     setup();
+    expect(screen.queryByRole('banner')).toBeNull();
     expect(screen.queryByRole('navigation')).toBeNull();
+    expect(screen.getByRole('button', { name: '終了' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: '使い方' }).querySelector('svg')).not.toBeNull();
     for (let index = 0; index < questions.length; index++) {
       press('Enter');
       press('Enter');
     }
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
-    expect(screen.getByRole('navigation')).not.toBeNull();
+    expect(screen.getByRole('banner')).not.toBeNull();
+    expect(screen.getByRole('link', { name: '← ホーム' })).not.toBeNull();
+    expect(screen.queryByRole('navigation')).toBeNull();
   });
 
-  it('keeps the navigation on the ready screen', () => {
+  it('shows the common header on the ready screen', () => {
     setup('/drill');
-    expect(screen.getByRole('navigation')).not.toBeNull();
+    expect(screen.getByRole('banner')).not.toBeNull();
+    expect(screen.getByRole('link', { name: '← ホーム' })).not.toBeNull();
+    expect(screen.queryByRole('navigation')).toBeNull();
     expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
   });
 });
 
 describe('Help sheet', () => {
-  it('opens from the header on Home, lists the key operations and closes', async () => {
-    setup('/');
+  it.each(['/', '/questions', '/glossary', '/stats', '/drill', '/review'])('opens and closes the common Help dialog on %s without navigating', async (path) => {
+    setup(path);
+    const originalContent = screen.getByRole('main').textContent;
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'ヘルプ' }));
-    const dialog = screen.getByRole('dialog', { name: 'ヘルプ' });
+    await user.click(screen.getByRole('button', { name: '使い方' }));
+    const dialog = screen.getByRole('dialog', { name: '使い方' });
     for (const key of ['Space', 'Enter', '1', '2', '3', 'Esc']) {
       expect(within(dialog).getByText(key, { selector: 'kbd' })).not.toBeNull();
     }
@@ -143,12 +151,13 @@ describe('Help sheet', () => {
     expect(within(dialog).getByText(/答えを見る／次へ/)).not.toBeNull();
     await user.click(within(dialog).getByRole('button', { name: '閉じる' }));
     expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('main').textContent).toBe(originalContent);
   });
 
   it('is reachable during a session, pauses the timer and ignores keys while open', async () => {
     setup();
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'ヘルプ' }));
+    await user.click(screen.getByRole('button', { name: '使い方' }));
     expect(screen.getByText('一時停止中')).not.toBeNull();
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Enter' });
     expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();

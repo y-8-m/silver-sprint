@@ -71,11 +71,39 @@ describe('Review Drill', () => {
     click('△ 怪しい');
     expect(screen.getByRole('heading', { name: '復習完了' })).not.toBeNull();
     expect(screen.getByText('2 / 2 問完了')).not.toBeNull();
-    click('弱点を再取得');
+    click('もう一度');
     expect(screen.getByText('弱点候補 1問を復習します。')).not.toBeNull();
     click('開始');
     expectQuestion(thirdId, 1, 1);
     expect(repo().load().questions[thirdId]).toMatchObject({ unsureCount: 2, lastRating: 'unsure' });
+  });
+
+  it.each(['/drill', '/review'])('retries and returns Home from the %s completion screen', (path) => {
+    setup(recordRating(createEmptyStats(), firstId, 'unknown', answeredAt), path, [questions[0]!]);
+    click('開始');
+    click('答えを見る');
+    click('評価せずに完了');
+    const finished = within(screen.getByRole('heading', { name: path === '/review' ? '復習完了' : 'ドリル完了' }).closest('section')!);
+    expect(finished.getByRole('button', { name: 'もう一度' })).not.toBeNull();
+    expect(finished.getByRole('link', { name: 'ホームへ' }).getAttribute('href')).toBe('/');
+    expect(finished.getAllByRole('link')).toHaveLength(1);
+    click('もう一度');
+    expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
+    click('開始');
+    click('答えを見る');
+    click('評価せずに完了');
+    fireEvent.click(screen.getByRole('link', { name: 'ホームへ' }));
+    expect(screen.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
+    expect(screen.queryByRole('progressbar')).toBeNull();
+    advance(20000);
+    expect(screen.queryByRole('article')).toBeNull();
+  });
+
+  it('counts only existing weak material in the main Home learning area', () => {
+    setup(seedStats(), '/');
+    const learn = within(screen.getByRole('region', { name: '学ぶ' }));
+    const review = within(learn.getByRole('region', { name: '復習' }));
+    expect(review.getByRole('link', { name: /^復習/ }).textContent).toContain('2 問');
   });
 
   it.each(['empty', 'known only', 'orphan only'] as const)('cannot start without weak material: %s', (kind) => {
@@ -97,7 +125,7 @@ describe('Review Drill', () => {
     expectQuestion(thirdId, 2, 2);
     click('答えを見る');
     click('○ 分かった');
-    click('弱点を再取得');
+    click('もう一度');
     expect(screen.getByText('現在、復習対象の問題はありません。')).not.toBeNull();
     expect((screen.getByRole('button', { name: '開始' }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.queryByRole('progressbar')).toBeNull();
@@ -114,7 +142,7 @@ describe('Review Drill', () => {
     }
     expect(screen.getByRole('heading', { name: '復習完了' })).not.toBeNull();
     expect(repo().load()).toEqual(original);
-    click('弱点を再取得');
+    click('もう一度');
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
     click('開始');
     expectQuestion(firstId, 1, 2);
@@ -133,7 +161,7 @@ describe('Review Drill', () => {
     expect((screen.getByRole('progressbar') as HTMLProgressElement).value).toBe(answerMs);
     advance(answerMs);
     expect(screen.getByRole('heading', { name: '復習完了' })).not.toBeNull();
-    click('弱点を再取得');
+    click('もう一度');
     expect((screen.getByRole('radio', { name: tempo }) as HTMLInputElement).checked).toBe(true);
   });
 
@@ -161,7 +189,7 @@ describe('Review Drill', () => {
     click('○ 分かった');
     expect(screen.getByRole('heading', { name: '復習完了' })).not.toBeNull();
     expect(screen.getByRole('alert').textContent).toBe('戦績を保存できませんでした。');
-    click('弱点を再取得');
+    click('もう一度');
     expect(screen.getByText('現在、復習対象の問題はありません。')).not.toBeNull();
     expect(repo().load().questions[firstId]?.lastRating).toBe('unknown');
   });
@@ -182,21 +210,18 @@ describe('Review Drill', () => {
     expect(repo().load()).toEqual(original);
   });
 
-  it('starts a fresh mode snapshot when navigating directly between Review and Drill', () => {
+  it('starts a fresh mode snapshot when navigating between Review and Drill via Home', () => {
     setup();
     click('開始');
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    const nav = () => within(screen.getByRole('navigation'));
-    fireEvent.click(nav().getByRole('link', { name: 'ドリル' }));
-    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
-    click('開始');
+    fireEvent.click(screen.getByRole('link', { name: /^すべて/ }));
     expectQuestion(firstId, 1, questions.length);
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(nav().getByRole('link', { name: '復習' }));
+    fireEvent.click(screen.getByRole('link', { name: /^復習/ }));
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
-    expect(nav().getByRole('link', { name: '復習' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('link', { name: '← ホーム' }).getAttribute('href')).toBe('/');
     expect(screen.queryByRole('article')).toBeNull();
   });
 
@@ -218,7 +243,7 @@ describe('Review Drill', () => {
     click('開始');
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '復習' }));
+    fireEvent.click(screen.getByRole('link', { name: /^復習/ }));
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
     expect(screen.queryByRole('group', { name: 'コース' })).toBeNull();
     expect(screen.queryByRole('group', { name: '出題順' })).toBeNull();

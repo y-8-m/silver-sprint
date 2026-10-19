@@ -2,13 +2,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--tap-min);
-  height: var(--tap-min);
+  flex: none;
+  min-height: var(--tap-min);
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--color-text-2);
+  font: inherit;
   cursor: pointer;
+}
+
+.iconButton {
+  width: var(--tap-min);
+}
+
+.textButton {
+  padding-inline: var(--space-2);
+  color: var(--color-accent);
+  white-space: nowrap;
 }
 
 /* 下から出るシート。広い画面では中央の1カラム幅に収める */

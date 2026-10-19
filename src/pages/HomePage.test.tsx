@@ -79,13 +79,33 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: /出題設定/ }).textContent).toContain('ランダム · ゆっくり');
   });
 
-  it('links the other screens as rows', () => {
+  it('shows the Home brand, help and three purpose-based sections without navigation', () => {
     setup();
-    const others = within(screen.getByRole('region', { name: 'そのほか' }));
-    expect(others.getByRole('link', { name: /^復習/ }).getAttribute('href')).toBe('/review');
-    expect(others.getByRole('link', { name: '問題一覧' }).getAttribute('href')).toBe('/questions');
-    expect(others.getByRole('link', { name: '用語集' }).getAttribute('href')).toBe('/glossary');
-    expect(others.getByRole('link', { name: '戦績' }).getAttribute('href')).toBe('/stats');
+    const header = within(screen.getByRole('banner'));
+    expect(header.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
+    expect(header.getByText('Java Silver SE 17 対策')).not.toBeNull();
+    expect(header.getByRole('button', { name: '使い方' }).textContent).toBe('使い方');
+    expect(header.queryByRole('link')).toBeNull();
+    expect(screen.queryByRole('navigation')).toBeNull();
+    const learn = within(screen.getByRole('region', { name: '学ぶ' }));
+    expect(learn.getByRole('region', { name: 'ドリル' })).not.toBeNull();
+    expect(learn.getByRole('region', { name: '復習' })).not.toBeNull();
+    const lookup = within(screen.getByRole('region', { name: '調べる' }));
+    expect(lookup.getByRole('link', { name: '問題一覧' }).getAttribute('href')).toBe('/questions');
+    expect(lookup.getByRole('link', { name: '用語集' }).getAttribute('href')).toBe('/glossary');
+    expect(within(screen.getByRole('region', { name: '振り返る' })).getByRole('link', { name: '戦績' }).getAttribute('href')).toBe('/stats');
+    expect(screen.queryByRole('heading', { name: 'そのほか' })).toBeNull();
+  });
+
+  it.each([
+    ['問題一覧', '問題一覧'], ['用語集', '用語集'], ['戦績', '戦績'],
+    [/^復習/, '復習'],
+  ])('navigates from the Home row %s', async (name, title) => {
+    const user = setup();
+    await user.click(screen.getByRole('link', { name }));
+    expect(screen.getByRole('heading', { name: title })).not.toBeNull();
+    await user.click(screen.getByRole('link', { name: '← ホーム' }));
+    expect(screen.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
   });
 
   it('hides the course rows when the content is invalid', () => {

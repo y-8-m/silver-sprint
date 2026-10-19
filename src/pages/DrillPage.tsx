@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import type { LayoutOutletContext } from '../app/layoutOutletContext';
 import InvalidContentNotice from '../components/InvalidContentNotice';
 import { AnswerAndExplanationSections, PromptSection } from '../components/QuestionSections';
@@ -154,7 +154,8 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
         <h2>{title}完了</h2>
         {saveError}
         <p>{total} / {total} 問完了</p>
-        <button className={styles.action} type="button" onClick={resetSession}>{mode === 'review' ? '弱点を再取得' : 'もう一度'}</button>
+        <button className={styles.action} type="button" onClick={resetSession}>もう一度</button>
+        <Link className={styles.homeLink} to="/">ホームへ</Link>
       </section>
     );
   }
@@ -180,10 +181,10 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
         </button>
         <p className={styles.progress} role="status">{getCurrentQuestionNumber(state)} / {total} 問</p>
         <div className={styles.headerEnd}>
-          <HelpButton className={styles.helpButton} />
           <button className={styles.quiet} type="button" onClick={() => setManualPauseKey(manualPaused ? null : resetKey)}>
             {manualPaused ? '再開' : '一時停止'}
           </button>
+          <HelpButton variant="icon" className={styles.helpButton} />
         </div>
       </div>
       <DrillTimerBar

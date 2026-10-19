@@ -48,23 +48,23 @@ function setup(path = '/', data: { questions?: Question[]; glossary?: GlossaryDi
 }
 
 describe('Pages and routing', () => {
-  it('navigates Home, Questions, Glossary, and Drill with a current-page indicator', async () => {
-    const { user } = setup();
-    expect(screen.getByText('教材データ：問題なし')).not.toBeNull();
-    expect(screen.queryByRole('article')).toBeNull();
-    const nav = within(screen.getByRole('navigation'));
-    expect(nav.getByRole('link', { name: 'ホーム' }).getAttribute('aria-current')).toBe('page');
-    await user.click(nav.getByRole('link', { name: '問題一覧' }));
-    expect(screen.getAllByRole('article')).toHaveLength(questions.length);
-    expect(nav.getByRole('link', { name: '問題一覧' }).getAttribute('aria-current')).toBe('page');
-    await user.click(nav.getByRole('link', { name: '用語集' }));
-    expect(screen.getAllByRole('article')).toHaveLength(Object.keys(glossary).length);
-    expect(nav.getByRole('link', { name: '用語集' }).getAttribute('aria-current')).toBe('page');
-    await user.click(nav.getByRole('link', { name: 'ドリル' }));
-    expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
-    expect(nav.getByRole('link', { name: 'ドリル' }).getAttribute('aria-current')).toBe('page');
-    await user.click(nav.getByRole('link', { name: 'ホーム' }));
-    expect(screen.queryByRole('article')).toBeNull();
+  it.each([
+    ['/questions', '問題一覧'], ['/glossary', '用語集'], ['/stats', '戦績'],
+    ['/drill', 'ドリル'], ['/review', '復習'],
+  ])('shows a body title and a fixed Home link on %s', async (path, title) => {
+    const { user } = setup(path);
+    const header = within(screen.getByRole('banner'));
+    expect(header.queryByRole('heading')).toBeNull();
+    expect(header.getByRole('button', { name: '使い方' }).textContent).toBe('使い方');
+    expect(screen.queryByRole('navigation')).toBeNull();
+    const headings = screen.getAllByRole('heading', { name: title });
+    expect(headings).toHaveLength(1);
+    expect(screen.getByRole('main').contains(headings[0]!)).toBe(true);
+    const home = header.getByRole('link', { name: '← ホーム' });
+    expect(home.getAttribute('href')).toBe('/');
+    await user.click(home);
+    expect(screen.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
+    expect(screen.queryByRole('link', { name: '← ホーム' })).toBeNull();
   });
 
   it('uses category and topic as AND filters and reports an empty result', async () => {
@@ -126,9 +126,10 @@ describe('Pages and routing', () => {
   it('keeps filters local to the mounted page', async () => {
     const { user } = setup('/questions');
     await user.selectOptions(screen.getByLabelText('カテゴリ'), 'B');
-    const nav = within(screen.getByRole('navigation'));
-    await user.click(nav.getByRole('link', { name: '用語集' }));
-    await user.click(nav.getByRole('link', { name: '問題一覧' }));
+    await user.click(screen.getByRole('link', { name: '← ホーム' }));
+    await user.click(screen.getByRole('link', { name: '用語集' }));
+    await user.click(screen.getByRole('link', { name: '← ホーム' }));
+    await user.click(screen.getByRole('link', { name: '問題一覧' }));
     expect(screen.getByRole('status').textContent).toBe(`${questions.length} / ${questions.length} 問`);
   });
 
@@ -194,7 +195,7 @@ describe('Pages and routing', () => {
     const { user } = setup(path, { questions: [...questions, questions[0]!] });
     expect(screen.getByRole('alert').textContent).toContain('教材データにエラー');
     expect(screen.queryByRole('article')).toBeNull();
-    await user.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
+    await user.click(screen.getByRole('link', { name: '← ホーム' }));
     expect(screen.getByText('教材データ：エラー')).not.toBeNull();
     expect(screen.getByText(`questions[${questions.length}].id`)).not.toBeNull();
     expect(screen.getByText(/Question ID .* is duplicated/)).not.toBeNull();

@@ -44,57 +44,67 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
 
   return (
     <>
-      {validation.valid && (
-        <section aria-labelledby="home-drill">
-          <div className={styles.sectionHeader}>
-            <h2 id="home-drill">ドリル</h2>
-            <button
-              className={styles.settingsToggle}
-              type="button"
-              aria-expanded={settingsOpen}
-              aria-controls={settingsId}
-              onClick={() => setSettingsOpen(!settingsOpen)}
-            >
-              出題設定　{ORDER_SUMMARY[preferences.order]} · {TEMPO_SUMMARY[preferences.tempo]}
-            </button>
-          </div>
-          <div id={settingsId} hidden={!settingsOpen}>
-            <OrderSelector order={preferences.order} onChange={(order) => changePreferences({ ...preferences, order })} />
-            <TempoSelector tempo={preferences.tempo} onChange={(tempo) => changePreferences({ ...preferences, tempo })} />
-          </div>
-          <ul className={`${styles.rows} ${styles.strong}`}>
-            {courses.map(({ course, key, label, count }) => (
-              <li key={key}>
-                <Link className={styles.row} to={buildDrillPath(course, preferences)}>
-                  <span>
-                    {course !== 'mixed' && <span className={styles.key}>{course}</span>}
-                    {label}
-                  </span>
-                  <span className={styles.meta}>{count} 問</span>
-                </Link>
-              </li>
-            ))}
+      <section aria-labelledby="home-learn" className={styles.learn}>
+        <h2 id="home-learn" className={styles.heading}>学ぶ</h2>
+        {validation.valid && (
+          <section aria-labelledby="home-drill">
+            <div className={styles.sectionHeader}>
+              <h3 id="home-drill">ドリル</h3>
+              <button
+                className={styles.settingsToggle}
+                type="button"
+                aria-expanded={settingsOpen}
+                aria-controls={settingsId}
+                onClick={() => setSettingsOpen(!settingsOpen)}
+              >
+                出題設定　{ORDER_SUMMARY[preferences.order]} · {TEMPO_SUMMARY[preferences.tempo]}
+              </button>
+            </div>
+            <div id={settingsId} hidden={!settingsOpen}>
+              <OrderSelector order={preferences.order} onChange={(order) => changePreferences({ ...preferences, order })} />
+              <TempoSelector tempo={preferences.tempo} onChange={(tempo) => changePreferences({ ...preferences, tempo })} />
+            </div>
+            <ul className={`${styles.rows} ${styles.strong}`}>
+              {courses.map(({ course, key, label, count }) => (
+                <li key={key}>
+                  <Link className={styles.row} to={buildDrillPath(course, preferences)}>
+                    <span>
+                      {course !== 'mixed' && <span className={styles.key}>{course}</span>}
+                      {label}
+                    </span>
+                    <span className={styles.meta}>{count} 問</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section aria-labelledby="home-review" className={styles.review}>
+          <Link className={styles.row} to="/review">
+            <div>
+              <h3 id="home-review">復習</h3>
+              <span className={styles.note}>△ 怪しい／× 分からなかった の問題を解き直す</span>
+            </div>
+            <span className={styles.meta}>{weakCount} 問</span>
+          </Link>
+        </section>
+      </section>
+
+      <div className={styles.references}>
+        <section aria-labelledby="home-lookup">
+          <h2 id="home-lookup" className={styles.subheading}>調べる</h2>
+          <ul className={styles.rows}>
+            <li><Link className={styles.row} to="/questions">問題一覧</Link></li>
+            <li><Link className={styles.row} to="/glossary">用語集</Link></li>
           </ul>
         </section>
-      )}
-
-      <section aria-labelledby="home-others">
-        <h2 id="home-others" className={styles.subheading}>そのほか</h2>
-        <ul className={styles.rows}>
-          <li>
-            <Link className={styles.row} to="/review">
-              <span>
-                復習
-                <span className={styles.note}>△ 怪しい／× 分からなかった の問題を解き直す</span>
-              </span>
-              <span className={styles.meta}>{weakCount} 問</span>
-            </Link>
-          </li>
-          <li><Link className={styles.row} to="/questions">問題一覧</Link></li>
-          <li><Link className={styles.row} to="/glossary">用語集</Link></li>
-          <li><Link className={styles.row} to="/stats">戦績</Link></li>
-        </ul>
-      </section>
+        <section aria-labelledby="home-reflect">
+          <h2 id="home-reflect" className={styles.subheading}>振り返る</h2>
+          <ul className={styles.rows}>
+            <li><Link className={styles.row} to="/stats">戦績</Link></li>
+          </ul>
+        </section>
+      </div>
 
       <p className={styles.status}>
         {validation.valid ? '教材データ：問題なし' : '教材データ：エラー'}

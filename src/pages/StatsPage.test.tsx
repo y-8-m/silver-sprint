@@ -59,8 +59,8 @@ describe('Stats Page', () => {
     expect(table.getAllByText('評価なし')).toHaveLength(questions.length - 3);
     expect(within(rows[1]!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['C', '0', '0', '2', '× 分からなかった', '2026/10/15 10:00:00']);
     expect(table.getByText('2026/10/15 10:00:00').getAttribute('datetime')).toBe('2026-10-15T01:00:00Z');
-    expect(screen.getByRole('navigation').textContent).toBe('ホーム問題一覧用語集ドリル復習戦績');
-    expect(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.queryByRole('navigation')).toBeNull();
+    expect(screen.getByRole('link', { name: '← ホーム' }).getAttribute('href')).toBe('/');
   });
 
   it('shows weak questions in material order and recent evaluations newest first', () => {
@@ -156,20 +156,20 @@ describe('Stats Page', () => {
     fireEvent.click(screen.getByRole('button', { name: '△ 怪しい' }));
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }));
+    fireEvent.click(screen.getByRole('link', { name: '戦績' }));
     metric('評価済み問題', `1 / ${questions.length}`);
     metric('△ 怪しい', '1');
     expect(within(screen.getByRole('region', { name: '弱点問題' })).getByText(`[C] ${questions[0]!.topic}`)).not.toBeNull();
     expect(within(screen.getByRole('region', { name: '最近の評価' })).getByText(/[C].*ローカル変数の初期化/)).not.toBeNull();
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ドリル' }));
-    fireEvent.click(screen.getByRole('button', { name: '開始' }));
+    fireEvent.click(screen.getByRole('link', { name: '← ホーム' }));
+    fireEvent.click(screen.getByRole('link', { name: /^すべて/ }));
     fireEvent.click(screen.getByRole('button', { name: '答えを見る' }));
     fireEvent.click(screen.getByRole('button', { name: '○ 分かった' }));
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: '戦績' }));
+    fireEvent.click(screen.getByRole('link', { name: '戦績' }));
     metric('○ 分かった', '1');
     metric('△ 怪しい', '0');
     expect(screen.getByText('弱点候補はありません。')).not.toBeNull();
@@ -181,7 +181,7 @@ describe('Stats Page', () => {
     expect(screen.getByRole('alert').textContent).toContain('教材データにエラー');
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('button', { name: '戦績をクリア' })).toBeNull();
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
+    fireEvent.click(screen.getByRole('link', { name: '← ホーム' }));
     expect(screen.getByText('教材データ：エラー')).not.toBeNull();
   });
 

@@ -169,10 +169,10 @@ afterAll(() => {
   }
 });
 
-function setup(data: Question[] = questions) {
+function setup(data: Question[] = questions, path = '/drill') {
   return render(
     <StrictMode>
-      <MemoryRouter initialEntries={['/drill']}>
+      <MemoryRouter initialEntries={[path]}>
         <AppRoutes questions={data} glossary={glossary} />
       </MemoryRouter>
     </StrictMode>,
@@ -426,6 +426,62 @@ describe('Drill Timer integration', () => {
     expect(screen.getByRole('status').textContent).toBe(`2 / ${questions.length} 問`);
   });
 
+  it.each([
+    ['/drill', 'question'], ['/drill', 'answer'],
+    ['/review', 'question'], ['/review', 'answer'],
+  ] as const)('pauses %s %s for Help and resumes the exact remaining time', (path, phase) => {
+    const repository = createLocalStorageStatsRepository(window.localStorage);
+    repository.save({ questions: { [questions[0]!.id]: {
+      knownCount: 0, unsureCount: 1, unknownCount: 0,
+      lastRating: 'unsure', lastAnsweredAt: '2026-10-15T00:00:00Z',
+    } } });
+    const previousStats = repository.load();
+    setup(questions.slice(0, 2), path);
+    click('開始');
+    if (phase === 'answer') click('答えを見る');
+    expect(screen.queryByRole('banner')).toBeNull();
+    expect(screen.queryByRole('navigation')).toBeNull();
+    expect(screen.getByRole('button', { name: '終了' })).not.toBeNull();
+    const questionId = screen.getByRole('article').getAttribute('data-question-id');
+    const progress = screen.getByRole('status').textContent;
+    advance(2137);
+    click('使い方');
+    const dialog = screen.getByRole('dialog', { name: '使い方' });
+    expect(screen.queryByRole('dialog', { name: 'ローカル変数' })).toBeNull();
+    expect(timer().value).toBe(7863);
+    advance(20000);
+    expect(timer().value).toBe(7863);
+    expect(screen.getByRole('article').getAttribute('data-question-id')).toBe(questionId);
+    expect(screen.getByRole('status').textContent).toBe(progress);
+    fireEvent.click(within(dialog).getByRole('button', { name: '閉じる' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(timer().value).toBe(7863);
+    expect(screen.getByRole('status').textContent).toBe(progress);
+    advance(7862);
+    expect(screen.getByRole('status').textContent).toBe(progress);
+    expect(screen.queryByRole('heading', { name: '答え' }) !== null).toBe(phase === 'answer');
+    advance(1);
+    if (phase === 'question') expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
+    else if (path === '/review') expect(screen.getByRole('heading', { name: '復習完了' })).not.toBeNull();
+    else expect(screen.getByRole('status').textContent).toBe('2 / 2 問');
+    expect(repository.load()).toEqual(previousStats);
+  });
+
+  it('keeps a manual pause after closing Help', () => {
+    setup();
+    click('開始');
+    advance(2100);
+    click('一時停止');
+    click('使い方');
+    fireEvent(screen.getByRole('dialog', { name: '使い方' }), new Event('cancel', { cancelable: true }));
+    advance(20000);
+    expect(timer().value).toBe(7900);
+    expect(screen.getByRole('button', { name: '再開' })).not.toBeNull();
+    click('再開');
+    advance(7900);
+    expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
+  });
+
   it('keeps manual pause after closing glossary detail', () => {
     setup();
     click('開始');
@@ -459,11 +515,11 @@ describe('Drill Timer integration', () => {
     advance(2000);
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ホーム' }));
+    expect(screen.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
     expect(vi.getTimerCount()).toBe(0);
     advance(20000);
     expect(screen.queryByRole('progressbar')).toBeNull();
-    fireEvent.click(within(screen.getByRole('navigation')).getByRole('link', { name: 'ドリル' }));
-    expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
+    fireEvent.click(screen.getByRole('link', { name: /^すべて/ }));
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
   });
 });

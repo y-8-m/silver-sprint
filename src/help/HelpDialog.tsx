@@ -6,7 +6,7 @@ const KEYS = [
   { keys: ['Space'], action: '一時停止／再開' },
   { keys: ['Enter'], action: '答えを見る／次へ（評価せずに進む）' },
   { keys: ['1', '2', '3'], action: '分かった／怪しい／分からなかった（評価して次へ）' },
-  { keys: ['Esc'], action: 'このヘルプや用語の詳細を閉じる' },
+  { keys: ['Esc'], action: '使い方や用語の詳細を閉じる' },
 ] as const;
 
 export default function HelpDialog() {
@@ -39,7 +39,7 @@ export default function HelpDialog() {
         if (!event.currentTarget.open) help?.closeHelp();
       }}
     >
-      <h2 id={titleId} ref={titleRef} tabIndex={-1}>ヘルプ</h2>
+      <h2 id={titleId} ref={titleRef} tabIndex={-1}>使い方</h2>
       <h3>キー操作（ドリル中）</h3>
       <dl className={styles.keys}>
         {KEYS.map(({ keys, action }) => (
@@ -51,7 +51,7 @@ export default function HelpDialog() {
       </dl>
       <p className={styles.note}>
         ボタンにフォーカスがあるときは、Space と Enter はそのボタンの操作になります。
-        ヘルプや用語を開いている間は、残り時間が止まります。
+        使い方や用語を開いている間は、残り時間が止まります。
       </p>
       <button className={styles.close} type="button" onClick={() => help?.closeHelp()}>閉じる</button>
     </dialog>

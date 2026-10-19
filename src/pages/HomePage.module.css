@@ -1,19 +1,46 @@
+.learn {
+  margin-top: var(--space-6);
+}
+
+.heading {
+  margin: 0 0 var(--space-2);
+  font-size: 1.5rem;
+}
+
 .sectionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  flex-wrap: wrap;
 }
 
-.sectionHeader h2 {
-  margin-block: var(--space-4) var(--space-1);
+.sectionHeader h3,
+.review h3 {
+  margin: 0;
   font-size: 1.25rem;
 }
 
+.review {
+  margin-top: var(--space-6);
+  border-top: var(--border-strong);
+  border-bottom: var(--border-hairline);
+}
+
+.review .row {
+  min-height: 5rem;
+}
+
+.references {
+  display: grid;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
 .subheading {
-  margin-block: var(--space-8) var(--space-1);
+  margin-block: 0 var(--space-1);
   color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
+  font-size: 1rem;
 }
 
 .settingsToggle {
@@ -83,4 +110,10 @@
   margin-block: var(--space-6) 0;
   color: var(--color-text-muted);
   font-size: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .references {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
