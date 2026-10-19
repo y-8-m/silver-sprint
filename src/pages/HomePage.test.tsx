@@ -86,19 +86,30 @@ describe('Home', () => {
   it('shows four independent h2 sections and keeps the Home brand and help', () => {
     setup();
     const header = within(screen.getByRole('banner'));
-    expect(header.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
+    expect(header.getByRole('heading', { name: 'Silver Sprint', level: 1 })).not.toBeNull();
     expect(header.getByText('Java Silver SE 17 対策')).not.toBeNull();
     expect(header.getByRole('button', { name: '使い方' }).textContent).toBe('使い方');
     expect(header.queryByRole('link')).toBeNull();
     expect(screen.queryByRole('navigation')).toBeNull();
     expect(screen.queryByRole('heading', { name: '学ぶ' })).toBeNull();
+    expect(screen.getAllByRole('heading').map((heading) => [heading.tagName, heading.textContent])).toEqual([
+      ['H1', 'Silver Sprint'],
+      ['H2', 'ドリル'],
+      ['H2', '復習'],
+      ['H2', '調べる'],
+      ['H2', '振り返る'],
+    ]);
     expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual(['ドリル', '復習', '調べる', '振り返る']);
+    for (const heading of screen.getAllByRole('heading', { level: 2 })) {
+      expect(heading.closest('a, button')).toBeNull();
+      expect(heading.querySelector('a, button')).toBeNull();
+    }
     const drill = screen.getByRole('region', { name: 'ドリル' });
     const review = screen.getByRole('region', { name: '復習' });
     expect(drill.parentElement).toBe(screen.getByRole('main'));
     expect(review.parentElement).toBe(screen.getByRole('main'));
     expect(within(review).getByRole('heading', { name: '復習', level: 2 }).closest('a')).toBeNull();
-    expect(within(review).getByRole('link', { name: /問題を解き直す/ }).getAttribute('href')).toBe('/review');
+    expect(within(review).getByRole('link', { name: /^△ 怪しい／× 分からなかった の問題\s*0 問$/ }).getAttribute('href')).toBe('/review');
     const lookup = within(screen.getByRole('region', { name: '調べる' }));
     expect(lookup.getByRole('link', { name: '問題一覧' }).getAttribute('href')).toBe('/questions');
     expect(lookup.getByRole('link', { name: '用語集' }).getAttribute('href')).toBe('/glossary');
@@ -108,13 +119,25 @@ describe('Home', () => {
 
   it.each([
     ['問題一覧', '問題一覧'], ['用語集', '用語集'], ['戦績', '戦績'],
-    [/問題を解き直す/, '復習'],
+    [/△ 怪しい／× 分からなかった の問題/, '復習'],
   ])('navigates from the Home row %s', async (name, title) => {
     const user = setup();
     await user.click(screen.getByRole('link', { name }));
     expect(screen.getByRole('heading', { name: title })).not.toBeNull();
     await user.click(screen.getByRole('link', { name: '← ホーム' }));
     expect(screen.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();
+  });
+
+  it('keeps the zero-count Review row linked and opens the empty Review screen from its count', async () => {
+    const user = setup();
+    const review = within(screen.getByRole('region', { name: '復習' }));
+    const link = review.getByRole('link', { name: /^△ 怪しい／× 分からなかった の問題\s*0 問$/ });
+    expect(review.getAllByRole('link')).toHaveLength(1);
+    expect(within(link).getByText('△ 怪しい／× 分からなかった の問題')).not.toBeNull();
+    await user.click(within(link).getByText('0 問'));
+    expect(screen.getByRole('heading', { name: '復習' })).not.toBeNull();
+    expect(screen.getByText('現在、復習対象の問題はありません。')).not.toBeNull();
+    expect((screen.getByRole('button', { name: '開始' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('hides the course rows when the content is invalid', () => {

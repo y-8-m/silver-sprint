@@ -102,7 +102,12 @@ describe('Review Drill', () => {
   it('counts only existing weak material in the independent Home Review section', () => {
     setup(seedStats(), '/');
     const review = within(screen.getByRole('region', { name: '復習' }));
-    expect(review.getByRole('link', { name: /問題を解き直す/ }).textContent).toContain('2 問');
+    const link = review.getByRole('link', { name: /^△ 怪しい／× 分からなかった の問題\s*2 問$/ });
+    expect(review.getAllByRole('link')).toHaveLength(1);
+    expect(link.getAttribute('href')).toBe('/review');
+    expect(within(link).getByText('△ 怪しい／× 分からなかった の問題')).not.toBeNull();
+    fireEvent.click(within(link).getByText('2 問'));
+    expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
   });
 
   it.each(['empty', 'known only', 'orphan only'] as const)('cannot start without weak material: %s', (kind) => {
@@ -218,7 +223,7 @@ describe('Review Drill', () => {
     expectQuestion(firstId, 1, questions.length);
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(screen.getByRole('link', { name: /問題を解き直す/ }));
+    fireEvent.click(screen.getByRole('link', { name: /△ 怪しい／× 分からなかった の問題/ }));
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
     expect(screen.getByRole('link', { name: '← ホーム' }).getAttribute('href')).toBe('/');
     expect(screen.queryByRole('article')).toBeNull();
@@ -242,7 +247,7 @@ describe('Review Drill', () => {
     click('開始');
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(screen.getByRole('link', { name: /問題を解き直す/ }));
+    fireEvent.click(screen.getByRole('link', { name: /△ 怪しい／× 分からなかった の問題/ }));
     expect(screen.getByText('弱点候補 2問を復習します。')).not.toBeNull();
     expect(screen.queryByRole('group', { name: 'コース' })).toBeNull();
     expect(screen.queryByRole('group', { name: '出題順' })).toBeNull();

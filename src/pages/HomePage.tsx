@@ -84,7 +84,7 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
         <ul className={`${styles.rows} ${styles.strong}`}>
           <li>
             <Link className={styles.row} to="/review">
-              <span>△ 怪しい／× 分からなかった の問題を解き直す</span>
+              <span>△ 怪しい／× 分からなかった の問題</span>
               <span className={styles.meta}>{weakCount} 問</span>
             </Link>
           </li>
