@@ -203,13 +203,15 @@ describe('Pages and routing', () => {
 });
 
 describe('Manual Drill', () => {
-  it('reveals, advances through all questions in definition order, finishes, and resets', async () => {
-    const { user } = setup('/drill');
-    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
+  it('reveals, advances through sample questions in definition order, finishes, and resets', async () => {
+    // Full material coverage belongs to data and session sequence tests.
+    const sampleQuestions = questions.slice(0, 3);
+    const { user } = setup('/drill', { questions: sampleQuestions });
+    expect(screen.getByText(`対象: ${sampleQuestions.length}問`)).not.toBeNull();
     await user.click(screen.getByRole('button', { name: '開始' }));
     const visited: string[] = [];
-    for (let number = 1; number <= questions.length; number++) {
-      expect(screen.getByRole('status').textContent).toBe(`${number} / ${questions.length} 問`);
+    for (let number = 1; number <= sampleQuestions.length; number++) {
+      expect(screen.getByRole('status').textContent).toBe(`${number} / ${sampleQuestions.length} 問`);
       expect(screen.queryByRole('heading', { name: '答え' })).toBeNull();
       expect(screen.queryByRole('heading', { name: '解説' })).toBeNull();
       const card = screen.getByRole('article');
@@ -220,16 +222,17 @@ describe('Manual Drill', () => {
       expect(card.textContent).toContain(prompt);
       expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
       expect(screen.getByRole('heading', { name: '解説' })).not.toBeNull();
-      await user.click(screen.getByRole('button', { name: number === questions.length ? '評価せずに完了' : '評価せずに次へ' }));
+      await user.click(screen.getByRole('button', { name: number === sampleQuestions.length ? '評価せずに完了' : '評価せずに次へ' }));
     }
-    expect(visited).toEqual(questions.map((question) => question.id));
+    expect(visited).toEqual(sampleQuestions.map((question) => question.id));
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
-    expect(screen.getByText(`${questions.length} / ${questions.length} 問完了`)).not.toBeNull();
+    expect(screen.getByText(`${sampleQuestions.length} / ${sampleQuestions.length} 問完了`)).not.toBeNull();
     expect(screen.queryByRole('article')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'もう一度' }));
-    expect(screen.getByText(`対象: ${questions.length}問`)).not.toBeNull();
+    expect(screen.getByText(`対象: ${sampleQuestions.length}問`)).not.toBeNull();
     await user.click(screen.getByRole('button', { name: '開始' }));
-    expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${sampleQuestions.length} 問`);
+    expect(screen.getByRole('article').getAttribute('data-question-id')).toBe(sampleQuestions[0]!.id);
   });
 
   it('uses the existing glossary tooltip and dialog without changing the Drill phase', async () => {
