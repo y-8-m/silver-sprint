@@ -319,4 +319,144 @@ export const glossary = {
     ],
     related: ['switchFallThrough', 'yieldStatement', 'enhancedFor'],
   },
+  class: {
+    term: 'クラス',
+    category: 'クラス',
+    short: [text('オブジェクトの型を定義するもの。フィールドやメソッドなどで、状態と操作を定める。')],
+    detail: [
+      { type: 'text', content: [text('クラスの定義と、そこから生成する'), term('instance', 'インスタンス'), text('は別の概念。'), code('class Dog {}'), text('という1つの定義から、'), code('new Dog()'), text('で複数の独立したオブジェクトを生成できる。')] },
+      { type: 'text', content: [text('変数はオブジェクトそのものではなく、参照型ならその'), term('reference', '参照値'), text('を保持する。クラス定義・変数・オブジェクトを区別する。')] },
+    ],
+    related: ['instance', 'reference', 'staticMember', 'interface'],
+  },
+  instance: {
+    term: 'インスタンス',
+    category: 'クラス',
+    short: [text('クラスなどの型を基に実行時に生成される、個々のオブジェクト。')],
+    detail: [
+      { type: 'text', content: [code('new Dog()'), text('を2回評価すると、同じ'), term('class', 'クラス'), text('の別々のインスタンスが生成される。それぞれが自分のインスタンスフィールドを持つ。')] },
+      { type: 'text', content: [text('変数を増やして参照値を代入しても、インスタンスが増えるわけではない。1つのインスタンスを複数の変数から参照できる。')] },
+    ],
+    related: ['class', 'reference', 'objectIdentity', 'constructor'],
+  },
+  objectIdentity: {
+    term: 'オブジェクトの同一性',
+    category: '参照型',
+    short: [text('複数の参照先が、まさに同じ1つのオブジェクトかどうかという区別。')],
+    detail: [
+      { type: 'text', content: [text('同じクラスでフィールドの値がすべて一致していても、別々に生成したオブジェクトなら同一ではない。状態の一致とオブジェクトの同一性は別。')] },
+      { type: 'text', content: [code('b = a'), text('では'), term('reference', '参照値'), text('だけをコピーする。オブジェクト自体はコピーされず、aとbは同じオブジェクトを参照する。')] },
+    ],
+    related: ['reference', 'instance'],
+  },
+  staticMember: {
+    term: 'staticメンバー',
+    category: 'クラス',
+    short: [text('個々のインスタンスではなく、クラスに属するフィールドやメソッド。')],
+    detail: [
+      { type: 'text', content: [text('インスタンスフィールドはオブジェクトごとに存在するが、staticフィールドは基本的にクラスにつき1つで、同じクラスのインスタンス間で共有される。')] },
+      { type: 'text', content: [code('static'), text('は所属を表す。'), code('final'), text('による再代入の制限とは別で、staticフィールドもfinalでなければ再代入できる。staticメソッドにはインスタンスメソッドの動的ディスパッチを適用しない。')] },
+    ],
+    related: ['class', 'instance', 'thisReference'],
+  },
+  thisReference: {
+    term: 'this参照',
+    category: 'クラス',
+    short: [text('インスタンスメソッドやコンストラクタなどで、現在の対象オブジェクトを指す参照。')],
+    detail: [
+      { type: 'text', content: [code('this.value = value;'), text('では、左辺は現在のオブジェクトのフィールド、右辺は同名の仮引数を表す。フィールドと仮引数の名前が同じでも区別できる。')] },
+      { type: 'text', content: [text('thisはオブジェクトへの参照であり、別のコンストラクタを呼び出す'), code('this(...)'), text('とは用途が異なる。staticメソッドには対象インスタンスがないため、this参照を使えない。')] },
+    ],
+    related: ['reference', 'instance', 'explicitConstructorInvocation', 'staticMember'],
+  },
+  immutable: {
+    term: '不変オブジェクト',
+    category: '参照型',
+    short: [text('生成後に状態を変更できないオブジェクト。Stringはその代表例。')],
+    detail: [
+      { type: 'text', content: [text('Stringのconcatは元の文字列を変更せず、結果のStringへの参照を返す。変数へ結果を再代入しても、元のオブジェクトを書き換えたことにはならない。')] },
+      { type: 'text', content: [text('変数の再代入を制限するfinalとは別の概念。finalな参照型変数でも、参照先が変更可能なオブジェクトなら、その状態は変更できる。')] },
+    ],
+    related: ['reference', 'objectIdentity'],
+  },
+  overload: {
+    term: 'オーバーロード',
+    category: 'メソッド',
+    short: [text('同名で引数の型・数・順序などの構成が異なるメソッドを用意すること。')],
+    detail: [
+      { type: 'text', content: [code('work(int)'), text('と'), code('work(String)'), text('のような組み合わせ。同じクラス内だけでなく、継承されたメソッドとの間でも成立する。戻り値型の違いだけでは区別できない。')] },
+      { type: 'text', content: [text('引数のコンパイル時の型などを基に、コンパイル時に呼び出すメソッドを選ぶ。継承したインスタンスメソッドの実装を置き換える'), term('override', 'オーバーライド'), text('とは異なる。')] },
+    ],
+    related: ['override', 'compileTimeType'],
+  },
+  override: {
+    term: 'オーバーライド',
+    category: 'メソッド',
+    short: [text('継承したインスタンスメソッドの実装を、子クラスなどで置き換えること。')],
+    detail: [
+      { type: 'text', content: [text('子クラスが親クラスのspeak()と同じシグネチャのメソッドを定義する例がある。シグネチャに加え、戻り値型の互換性やアクセス範囲などの条件を満たす必要がある。')] },
+      { type: 'text', content: [text('通常のインスタンスメソッド呼び出しでは、実際のオブジェクト型に応じた実装が実行時に選ばれる。引数構成を変えて別のメソッドを用意する'), term('overload', 'オーバーロード'), text('とは区別する。staticメソッドはオーバーライドの対象ではない。')] },
+    ],
+    related: ['overload', 'runtimeType', 'polymorphism'],
+  },
+  polymorphism: {
+    term: 'ポリモーフィズム',
+    category: 'オブジェクト指向',
+    short: [text('共通の型を通じた同じ操作が、実際のオブジェクトに応じた振る舞いになる仕組み。')],
+    detail: [
+      { type: 'text', content: [code('Animal animal = new Dog();'), text('でanimal.speak()を呼ぶと、Dogでオーバーライドした実装が実行される。共通のAnimal型を使いつつ、具体的なオブジェクトに応じた処理を利用できる。')] },
+      { type: 'text', content: [text('呼び出し可能な操作はコンパイル時の型から判定する。実際のオブジェクトにある独自の操作まで、共通の型の変数からすべて呼べるわけではない。インタフェース型による実装の使い分けにも利用できる。')] },
+    ],
+    related: ['override', 'compileTimeType', 'runtimeType', 'interface'],
+  },
+  interface: {
+    term: 'インタフェース',
+    category: '型',
+    short: [text('実装クラスが提供する操作の契約などを表す参照型。実装クラスのインスタンスを参照する変数の型にできる。')],
+    detail: [
+      { type: 'text', content: [code('List<String> list = new ArrayList<>();'), text('では、Listはインタフェース、ArrayListはその実装クラス。Listが共通の操作の契約を表し、ArrayListが格納方法や処理を具体化する。')] },
+      { type: 'text', content: [text('呼び出せるメソッドは宣言型から利用可能と判定できるかで決まる。インタフェースが継承するメソッドなども関わるため、そのインタフェース自身で宣言したメソッドに限るとはいえない。必要な操作が共通なら実装を差し替えられる場合がある。')] },
+    ],
+    related: ['class', 'instance', 'compileTimeType', 'polymorphism'],
+  },
+  bytecode: {
+    term: 'バイトコード',
+    category: '実行モデル',
+    short: [text('Javaソースをコンパイルして得られる、JVM向けの命令形式。classファイルに格納される。')],
+    detail: [
+      { type: 'text', content: [code('javac Hello.java'), text('はソースコードをコンパイルし、バイトコードを含むHello.classを生成する。classファイルには命令以外のクラス情報なども含まれる。')] },
+      { type: 'text', content: [text('Javaソースそのものでも、特定のCPU向けの機械語そのものでもない。'), term('jvm', 'JVM'), text('がこの形式を読み込み実行する。コンパイルと実行は別工程。')] },
+    ],
+    related: ['jvm', 'class'],
+  },
+  jvm: {
+    term: 'JVM',
+    category: '実行モデル',
+    short: [text('Java Virtual Machineの略。Javaバイトコードの実行環境を提供する仮想マシン。')],
+    detail: [
+      { type: 'text', content: [text('javacはソースコードを'), term('bytecode', 'バイトコード'), text('へ変換するコンパイラ。JVMはそのバイトコードを実行する。両者は役割が異なる。')] },
+      { type: 'text', content: [code('java Hello'), text('ではJVMを起動してHelloクラスのmainメソッドから実行する。コマンドに指定するHelloはクラス名で、Hello.classというファイル名ではない。')] },
+    ],
+    related: ['bytecode'],
+  },
+  compileTimeType: {
+    term: 'コンパイル時の型',
+    category: '型',
+    short: [text('コンパイル時に決まる変数や式の型。参照先のオブジェクトのクラスとは区別する。')],
+    detail: [
+      { type: 'text', content: [code('Animal animal = new Dog();'), text('では、変数animalのコンパイル時の型は宣言型のAnimal。animalを使ってメソッドを呼べるかは、Animal型から利用可能かを基に判定する。')] },
+      { type: 'text', content: [text('この概念は明示的な変数の宣言型だけを指すものではなく、式の型やvarで推論される変数の型も含む。コンパイル時に決まり、参照先がDogだからanimalの宣言型がDogに切り替わるわけではない。')] },
+    ],
+    related: ['runtimeType', 'localVariableTypeInference', 'overload'],
+  },
+  runtimeType: {
+    term: '実行時のオブジェクト型',
+    category: '型',
+    short: [text('実行時に実際に参照されているオブジェクトの型。クラスのインスタンスなら、そのオブジェクトの実際のクラスを指す。')],
+    detail: [
+      { type: 'text', content: [code('Animal animal = new Dog();'), text('では、animalの宣言型はAnimalだが、実際のオブジェクトのクラスはDog。オーバーライドされたインスタンスメソッドの実装は、この実際のクラスに応じて選ばれる。')] },
+      { type: 'text', content: [text('参照先を別のオブジェクトへ変更しても、変数の宣言型自体は変わらない。nullはオブジェクトを参照していないため、参照先の実際のクラスはない。')] },
+    ],
+    related: ['compileTimeType', 'instance', 'override'],
+  },
 } satisfies GlossaryDictionary;
