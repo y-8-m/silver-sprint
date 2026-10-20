@@ -45,9 +45,9 @@ const knownGlossary = {
 const missingReference = term('missing', '存在しない用語');
 
 describe('validateContent', () => {
-  it('accepts all sixty questions and thirty-nine glossary entries with valid glossary references', () => {
-    expect(questions).toHaveLength(60);
-    expect(Object.keys(glossary)).toHaveLength(39);
+  it('accepts all seventy-five questions and forty glossary entries with valid glossary references', () => {
+    expect(questions).toHaveLength(75);
+    expect(Object.keys(glossary)).toHaveLength(40);
     expect(validateContent(questions, glossary)).toEqual({ valid: true, issues: [] });
   });
 
@@ -86,7 +86,7 @@ describe('validateContent', () => {
       ['conditional-operator-evaluation', 'B'],
     ]);
     expect(questions.slice(16, 30)).toEqual(additionalOperatorQuestions);
-    expect(new Set(questions.map(({ id }) => id)).size).toBe(60);
+    expect(new Set(questions.map(({ id }) => id)).size).toBe(75);
     expect(Object.fromEntries(['A', 'B', 'C', 'D'].map((category) => [
       category, additionalOperatorQuestions.filter((question) => question.category === category).length,
     ]))).toEqual({ A: 1, B: 8, C: 5, D: 0 });
@@ -151,7 +151,7 @@ describe('validateContent', () => {
     ]));
     expect(counts(questions.slice(0, 30))).toEqual({ A: 3, B: 13, C: 13, D: 1 });
     expect(counts(additionalControlFlowQuestions)).toEqual({ A: 0, B: 10, C: 5, D: 0 });
-    expect(counts(questions)).toEqual({ A: 18, B: 23, C: 18, D: 1 });
+    expect(counts(questions)).toEqual({ A: 18, B: 38, C: 18, D: 1 });
   });
 
   it('sets timeWeight only on the six specified control-flow questions', () => {
@@ -178,14 +178,14 @@ describe('validateContent', () => {
     ]);
     const originalIds = Object.keys(glossary).slice(0, 17);
     expect(entries.every(([id]) => !originalIds.includes(id))).toBe(true);
-    expect(new Set(Object.keys(glossary)).size).toBe(39);
+    expect(new Set(Object.keys(glossary)).size).toBe(40);
   });
 
   it('appends fifteen independent concept questions with the specified IDs and weights', () => {
     const additions: Question[] = [...additionalExecutionModelQuestions, ...additionalObjectQuestions];
     expect(additionalExecutionModelQuestions).toHaveLength(8);
     expect(additionalObjectQuestions).toHaveLength(7);
-    expect(questions.slice(45)).toEqual(additions);
+    expect(questions.slice(45, 60)).toEqual(additions);
     expect(additions.map(({ id }) => id)).toEqual([
       'java-compilation-execution', 'class-instance-distinction',
       'default-initialization-distinction', 'object-identity-aliasing',
@@ -205,13 +205,13 @@ describe('validateContent', () => {
   });
 
   it('adds fourteen linked concept terms without replacing existing glossary IDs', () => {
-    const additions = Object.entries<GlossaryDictionary[string]>(glossary).slice(25);
+    const additions = Object.entries<GlossaryDictionary[string]>(glossary).slice(25, 39);
     expect(additions.map(([id]) => id)).toEqual([
       'class', 'instance', 'objectIdentity', 'staticMember', 'thisReference', 'immutable',
       'overload', 'override', 'polymorphism', 'interface', 'bytecode', 'jvm',
       'compileTimeType', 'runtimeType',
     ]);
-    const explanations = JSON.stringify(questions.slice(45).map(({ explanation }) => explanation));
+    const explanations = JSON.stringify(questions.slice(45, 60).map(({ explanation }) => explanation));
     for (const [id, entry] of additions) {
       expect(entry.short.length, id).toBeGreaterThan(0);
       expect(entry.detail?.length, id).toBeGreaterThan(0);

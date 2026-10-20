@@ -118,3 +118,38 @@ describe('buildQuestionSequence', () => {
     expect(random).not.toHaveBeenCalled();
   });
 });
+
+describe('75-question material integration', () => {
+  it.each(['mixed', 'B'] as const)('includes the complete %s pool in both orders', (course) => {
+    const expected = questions.filter((q) => course === 'mixed' || q.category === course).map((q) => q.id);
+    expect(expected).toHaveLength(course === 'mixed' ? 75 : 38);
+    const sequential = buildQuestionSequence(questions, { course, order: 'sequential', questionCount: 'all' });
+    const random = buildQuestionSequence(questions, { course, order: 'random', questionCount: 'all' }, () => 0.5);
+    expect(sequential).toEqual(expected);
+    expect([...random].sort()).toEqual([...expected].sort());
+    expect(new Set(random).size).toBe(expected.length);
+  });
+
+  it.each([5, 10, 15, 'all'] as const)('can select every new question with count %s, preserving subset and ordering guarantees', (questionCount) => {
+    for (const course of ['mixed', 'B'] as const) {
+      const candidates = questions.filter((q) => course === 'mixed' || q.category === course).map((q) => q.id);
+      for (const question of questions.slice(60)) {
+        const targetIndex = candidates.indexOf(question.id);
+        for (const order of ['sequential', 'random'] as const) {
+          // A valid Fisher–Yates stream that moves this candidate to the first slot.
+          let index = candidates.length - 1;
+          const random = () => {
+            const target = index === targetIndex ? 0 : index;
+            return target / (index-- + 1);
+          };
+          const sequence = buildQuestionSequence(questions, { course, order, questionCount }, random);
+          expect(sequence, question.id).toContain(question.id);
+          expect(sequence).toHaveLength(questionCount === 'all' ? candidates.length : questionCount);
+          expect(new Set(sequence).size).toBe(sequence.length);
+          expect(sequence.every((id) => candidates.includes(id))).toBe(true);
+          if (order === 'sequential') expect(sequence).toEqual(candidates.filter((id) => sequence.includes(id)));
+        }
+      }
+    }
+  });
+});

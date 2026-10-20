@@ -459,4 +459,15 @@ export const glossary = {
     ],
     related: ['compileTimeType', 'instance', 'override'],
   },
+  fieldHiding: {
+    term: 'フィールドの隠蔽',
+    category: 'クラス',
+    short: [text('子クラスで親クラスと同名のフィールドを宣言し、親のフィールドを隠すこと。参照するフィールドは式のコンパイル時の型などから決まる。')],
+    detail: [
+      { type: 'text', content: [text('親と子の同名のインスタンスフィールドは、1つの子インスタンス内に別々に存在し得る。子で同名フィールドを宣言しても、親側の値が置き換わるわけではない。')] },
+      { type: 'text', content: [code('Parent obj = new Child();'), text('では、obj.valueは式objの'), term('compileTimeType', 'コンパイル時の型'), text('であるParent側のフィールドを参照する。((Child) obj).valueなら、式の型がChildとなり子側を参照する。')] },
+      { type: 'text', content: [term('override', 'オーバーライド'), text('されたインスタンスメソッドの実装は'), term('runtimeType', '実行時のオブジェクト型'), text('に応じて選ばれるが、フィールドアクセスに同じ動的ディスパッチは適用されない。フィールドの隠蔽とメソッドのオーバーライドは別の仕組み。')] },
+    ],
+    related: ['override', 'compileTimeType', 'runtimeType'],
+  },
 } satisfies GlossaryDictionary;

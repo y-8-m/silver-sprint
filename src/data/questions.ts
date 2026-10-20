@@ -4,6 +4,8 @@ import { additionalOperatorQuestions } from './questions/operators';
 import { additionalControlFlowQuestions } from './questions/controlFlow';
 import { additionalExecutionModelQuestions } from './questions/executionModel';
 import { additionalObjectQuestions } from './questions/objects';
+import { additionalReferenceFlowQuestions } from './questions/referenceFlow';
+import { additionalObjectFlowQuestions } from './questions/objectFlow';
 import type { Question } from './types';
 
 export const questions = [
@@ -249,4 +251,6 @@ class Main {
   ...additionalControlFlowQuestions,
   ...additionalExecutionModelQuestions,
   ...additionalObjectQuestions,
+  ...additionalReferenceFlowQuestions,
+  ...additionalObjectFlowQuestions,
 ] satisfies Question[];

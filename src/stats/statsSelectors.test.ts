@@ -98,3 +98,20 @@ describe('Stats selectors', () => {
     expect(questions.map((question) => question.id)).toEqual(['q1', 'q2', 'q3', 'q4']);
   });
 });
+
+describe('review with the expanded material', () => {
+  it('retains existing weak IDs, ignores unrated additions, and reviews new weak questions in material order', () => {
+    const previousMaterial = material.slice(0, 60);
+    const oldWeak = previousMaterial[0]!.id;
+    const firstNew = material[60]!.id;
+    const lastNew = material[74]!.id;
+    const timestamp = '2026-10-20T00:00:00.000Z';
+    const existing = recordRating(createEmptyStats(), oldWeak, 'unknown', timestamp);
+    const original = structuredClone(existing);
+    expect(getWeakQuestionIds(existing, material)).toEqual(getWeakQuestionIds(existing, previousMaterial));
+    const updated = recordRating(recordRating(existing, lastNew, 'unsure', timestamp), firstNew, 'unknown', timestamp);
+    expect(getWeakQuestionIds(updated, material)).toEqual([oldWeak, firstNew, lastNew]);
+    expect(getWeakQuestionIds(recordRating(updated, firstNew, 'known', timestamp), material)).toEqual([oldWeak, lastNew]);
+    expect(existing).toEqual(original);
+  });
+});
