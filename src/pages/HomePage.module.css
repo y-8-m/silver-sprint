@@ -25,6 +25,9 @@
 }
 
 .settingsToggle {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: left;
   min-height: 2.75rem;
   padding-inline: var(--space-2);
   border: 0;

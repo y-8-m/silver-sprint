@@ -164,7 +164,7 @@ describe('Stats Page', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     fireEvent.click(screen.getByRole('button', { name: '戦績をクリア' }));
     fireEvent.click(screen.getByRole('link', { name: '← ホーム' }));
-    fireEvent.click(screen.getByRole('link', { name: /^すべて/ }));
+    fireEvent.click(screen.getByRole('link', { name: /^全カテゴリ/ }));
     fireEvent.click(screen.getByRole('button', { name: '答えを見る' }));
     fireEvent.click(screen.getByRole('button', { name: '○ 分かった' }));
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);

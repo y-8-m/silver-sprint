@@ -10,6 +10,7 @@ import type { StatsRepository } from '../stats/statsRepository';
 import { getWeakQuestionIds } from '../stats/statsSelectors';
 import { useStats } from '../stats/useStats';
 import OrderSelector from './drill/OrderSelector';
+import QuestionCountSelector from './drill/QuestionCountSelector';
 import TempoSelector from './drill/TempoSelector';
 import styles from './HomePage.module.css';
 import pageStyles from './Pages.module.css';
@@ -32,7 +33,7 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
   }
 
   const courses: { course: Course; key: string; label: string; count: number }[] = [
-    { course: 'mixed', key: 'すべて', label: 'すべて', count: questions.length },
+    { course: 'mixed', key: 'mixed', label: '全カテゴリ', count: questions.length },
     ...CATEGORIES.map((category) => ({
       course: category,
       key: category,
@@ -55,10 +56,11 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
               aria-controls={settingsId}
               onClick={() => setSettingsOpen(!settingsOpen)}
             >
-              出題設定　{ORDER_SUMMARY[preferences.order]} · {TEMPO_SUMMARY[preferences.tempo]}
+              出題設定　{ORDER_SUMMARY[preferences.order]} · {TEMPO_SUMMARY[preferences.tempo]} · {preferences.questionCount === 'all' ? '全問' : `${preferences.questionCount}問`}
             </button>
           </div>
           <div id={settingsId} hidden={!settingsOpen}>
+            <QuestionCountSelector questionCount={preferences.questionCount} onChange={(questionCount) => changePreferences({ ...preferences, questionCount })} />
             <OrderSelector order={preferences.order} onChange={(order) => changePreferences({ ...preferences, order })} />
             <TempoSelector tempo={preferences.tempo} onChange={(tempo) => changePreferences({ ...preferences, tempo })} />
           </div>
@@ -70,7 +72,9 @@ export default function HomePage({ questions, validation, statsRepository }: Hom
                     {course !== 'mixed' && <span className={styles.key}>{course}</span>}
                     <span className={styles.courseName}>{label}</span>
                   </span>
-                  <span className={styles.meta}>{count} 問</span>
+                  <span className={styles.meta}>
+                    {preferences.questionCount !== 'all' && preferences.questionCount < count ? `${preferences.questionCount} / ` : ''}{count} 問
+                  </span>
                 </Link>
               </li>
             ))}

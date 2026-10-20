@@ -5,10 +5,14 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
-import { questions } from '../data/questions';
+import { questions as materialQuestions } from '../data/questions';
 import type { Question } from '../data/types';
+import { DRILL_PREFERENCES_STORAGE_KEY } from '../drill/drillLaunch';
 import * as sessionSequence from '../drill/sessionSequence';
 import { createLocalStorageStatsRepository, STATS_BACKUP_STORAGE_KEY, STATS_STORAGE_KEY } from '../stats/localStorageStatsRepository';
+
+// Keep UI sessions small; full material coverage belongs to sequence tests.
+const questions = materialQuestions.slice(0, 8);
 
 // Native modal behavior is also checked in the browser.
 const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
@@ -356,7 +360,7 @@ describe('Drill Course / Order integration', () => {
     expect(build).toHaveBeenCalledTimes(calls);
     click('もう一度');
     expect(build).toHaveBeenCalledTimes(calls + 1);
-    expect(build).toHaveBeenLastCalledWith(data, { course: 'C', order: 'random' });
+    expect(build).toHaveBeenLastCalledWith(data, { course: 'C', order: 'random', questionCount: 'all' });
     for (const name of ['C Java固有ルール', 'ランダム', 'ゆっくり']) {
       expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
     }
@@ -370,6 +374,83 @@ describe('Drill Course / Order integration', () => {
     }
     expect(screen.getByRole('heading', { name: 'ドリル完了' })).not.toBeNull();
     expect(build).toHaveBeenCalledTimes(calls + 1);
+  });
+});
+
+describe('Drill question count integration', () => {
+  it('keeps direct-access defaults independent of saved Home preferences', () => {
+    window.localStorage.setItem(DRILL_PREFERENCES_STORAGE_KEY, JSON.stringify({ order: 'random', tempo: 'fast', questionCount: 5 }));
+    setup();
+    for (const name of ['全カテゴリ', '順番', '標準', '全問']) {
+      expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
+    }
+    expect(screen.getByRole('status').textContent).toBe(`対象: ${questions.length}問`);
+  });
+
+  it.each([['5問', 5], ['10問', 8], ['15問', 8], ['全問', 8]] as const)('updates the ready count immediately for %s', (name, total) => {
+    setup();
+    fireEvent.click(screen.getByRole('radio', { name }));
+    expect(screen.getByRole('status').textContent).toBe(`対象: ${total}問`);
+    click('開始');
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${total} 問`);
+    expect(screen.queryByRole('group', { name: '出題数' })).toBeNull();
+  });
+
+  it.each(['5', '10', '15', 'all', 'invalid', ''])('applies URL count %s to the actual session', (count) => {
+    const data = Array.from({ length: 16 }, (_, index) => ({ ...questions[0]!, id: `sample-${index}` }));
+    setup(data, `/drill?course=mixed&order=random&tempo=fast${count ? `&count=${count}` : ''}`);
+    const total = ['5', '10', '15'].includes(count) ? Number(count) : data.length;
+    expect(screen.getByRole('status').textContent).toBe(`1 / ${total} 問`);
+    expect(screen.queryByRole('button', { name: '開始' })).toBeNull();
+  });
+
+  it('keeps a limited session fixed through interaction and samples again with the same settings on retry', () => {
+    const actualBuild = sessionSequence.buildQuestionSequence;
+    let randomValue = 0.999;
+    const build = vi.spyOn(sessionSequence, 'buildQuestionSequence')
+      .mockImplementation((data, settings) => actualBuild(data, settings, () => randomValue));
+    setup();
+    fireEvent.click(screen.getByRole('radio', { name: '5問' }));
+    const snapshot = [...build.mock.results.at(-1)!.value as string[]];
+    const calls = build.mock.calls.length;
+    fireEvent.click(screen.getByRole('radio', { name: 'ゆっくり' }));
+    click('開始');
+    click('一時停止');
+    advance(20000);
+    click('再開');
+    click('答えを見る');
+    fireEvent.click(within(screen.getByRole('article')).getByRole('button', { name: 'ローカル変数' }));
+    advance(20000);
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '閉じる' }));
+    for (const [index, id] of snapshot.entries()) {
+      expect(screen.getByRole('article').getAttribute('data-question-id')).toBe(id);
+      expect(screen.getByRole('status').textContent).toBe(`${index + 1} / 5 問`);
+      if (index > 0) click('答えを見る');
+      click('○ 分かった');
+    }
+    expect(screen.getByText('5 / 5 問完了')).not.toBeNull();
+    expect(build).toHaveBeenCalledTimes(calls);
+    randomValue = 0;
+    click('もう一度');
+    expect(build).toHaveBeenCalledTimes(calls + 1);
+    expect(build).toHaveBeenLastCalledWith(questions, { course: 'mixed', order: 'sequential', questionCount: 5 });
+    for (const name of ['全カテゴリ', '順番', 'ゆっくり', '5問']) {
+      expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
+    }
+    const nextSnapshot = build.mock.results.at(-1)!.value as string[];
+    expect(nextSnapshot).not.toEqual(snapshot);
+    expect(nextSnapshot).toHaveLength(5);
+    click('開始');
+    expect(screen.getByRole('article').getAttribute('data-question-id')).toBe(nextSnapshot[0]);
+    expect(build).toHaveBeenCalledTimes(calls + 1);
+  });
+
+  it('keeps an empty limited course unstartable', () => {
+    setup(questions.filter((question) => question.category !== 'D'));
+    fireEvent.click(screen.getByRole('radio', { name: '5問' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'D API・語彙' }));
+    expect(screen.getByRole('status').textContent).toBe('対象: 0問');
+    expect((screen.getByRole('button', { name: '開始' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
@@ -575,7 +656,7 @@ describe('Drill Timer integration', () => {
     expect(vi.getTimerCount()).toBe(0);
     advance(20000);
     expect(screen.queryByRole('progressbar')).toBeNull();
-    fireEvent.click(screen.getByRole('link', { name: /^すべて/ }));
+    fireEvent.click(screen.getByRole('link', { name: /^全カテゴリ/ }));
     expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);
   });
 });

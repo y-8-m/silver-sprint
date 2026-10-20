@@ -5,12 +5,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
-import { questions } from '../data/questions';
+import { questions as materialQuestions } from '../data/questions';
 import type { Question } from '../data/types';
+import { DRILL_PREFERENCES_STORAGE_KEY } from '../drill/drillLaunch';
 import { createLocalStorageStatsRepository } from '../stats/localStorageStatsRepository';
 import { recordRating } from '../stats/statsService';
 import { createEmptyStats } from '../stats/statsTypes';
 import type { Stats } from '../stats/statsTypes';
+
+// Keep UI sessions small; full material coverage belongs to sequence tests.
+const questions = materialQuestions.slice(0, 8);
 
 const answeredAt = '2026-10-15T00:00:00.000Z';
 const firstId = questions[0]!.id;
@@ -54,6 +58,23 @@ function expectQuestion(id: string, number: number, total: number) {
 }
 
 describe('Review Drill', () => {
+  it('ignores saved and URL counts and visits every current weak question', () => {
+    window.localStorage.setItem(DRILL_PREFERENCES_STORAGE_KEY, JSON.stringify({ order: 'random', tempo: 'fast', questionCount: 5 }));
+    const stats = questions.reduce((stats, question) => recordRating(stats, question.id, 'unknown', answeredAt), createEmptyStats());
+    setup(stats, '/review?course=C&order=random&count=5');
+    expect(screen.queryByRole('group', { name: '出題数' })).toBeNull();
+    expect(screen.getByText(`弱点候補 ${questions.length}問を復習します。`)).not.toBeNull();
+    click('開始');
+    for (const [index, question] of questions.entries()) {
+      expectQuestion(question.id, index + 1, questions.length);
+      click('答えを見る');
+      click('△ 怪しい');
+    }
+    expect(screen.getByText(`${questions.length} / ${questions.length} 問完了`)).not.toBeNull();
+    click('もう一度');
+    expect(screen.getByText(`弱点候補 ${questions.length}問を復習します。`)).not.toBeNull();
+  });
+
   it('only visits current weak IDs in material order and refreshes the snapshot after completion', () => {
     setup();
     expect(screen.getByRole('heading', { name: '復習' })).not.toBeNull();
@@ -219,7 +240,7 @@ describe('Review Drill', () => {
     click('開始');
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    fireEvent.click(screen.getByRole('link', { name: /^すべて/ }));
+    fireEvent.click(screen.getByRole('link', { name: /^全カテゴリ/ }));
     expectQuestion(firstId, 1, questions.length);
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: '終了' }));

@@ -5,8 +5,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AppRoutes from '../app/router';
 import { glossary } from '../data/glossary';
-import { questions } from '../data/questions';
+import { questions as materialQuestions } from '../data/questions';
 import { DRILL_PREFERENCES_STORAGE_KEY } from '../drill/drillLaunch';
+
+const questions = materialQuestions.slice(0, 8);
 
 afterEach(() => {
   cleanup();
@@ -24,12 +26,39 @@ function setup(path = '/') {
 }
 
 describe('Home', () => {
+  it('updates course counts and summaries immediately and restores the selected count on return', async () => {
+    const user = setup();
+    const toggle = screen.getByRole('button', { name: /出題設定/ });
+    expect(toggle.textContent).toContain('順番 · 標準 · 全問');
+    await user.click(toggle);
+    for (const name of ['5問', '10問', '15問', '全問']) {
+      await user.click(screen.getByRole('radio', { name }));
+      expect((screen.getByRole('radio', { name }) as HTMLInputElement).checked).toBe(true);
+      expect(toggle.textContent).toContain(name);
+    }
+    await user.click(screen.getByRole('radio', { name: '5問' }));
+    const drill = within(screen.getByRole('region', { name: 'ドリル' }));
+    expect(drill.getByRole('link', { name: /^全カテゴリ/ }).textContent).toBe('全カテゴリ5 / 8 問');
+    expect(drill.getByRole('link', { name: /^A/ }).textContent).toBe('A概念理解2 問');
+    expect(drill.getByRole('link', { name: /^D/ }).textContent).toBe('DAPI・語彙1 問');
+    await user.click(toggle);
+    expect(screen.queryByRole('group', { name: '出題数' })).toBeNull();
+    await user.click(drill.getByRole('link', { name: /^全カテゴリ/ }));
+    expect(screen.getByRole('status').textContent).toBe('1 / 5 問');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    await user.click(screen.getByRole('button', { name: '終了' }));
+    confirm.mockRestore();
+    expect(screen.getByRole('button', { name: /出題設定/ }).textContent).toContain('5問');
+    await user.click(screen.getByRole('button', { name: /出題設定/ }));
+    expect((screen.getByRole('radio', { name: '5問' }) as HTMLInputElement).checked).toBe(true);
+  });
+
   it('lists the courses directly under the Drill heading with question counts', () => {
     setup();
     const drill = within(screen.getByRole('region', { name: 'ドリル' }));
     const rows = drill.getAllByRole('link');
     expect(rows.map((row) => row.textContent)).toEqual([
-      `すべて${questions.length} 問`,
+      `全カテゴリ${questions.length} 問`,
       ...(['A', 'B', 'C', 'D'] as const).map((category) => (
         `${category}${{ A: '概念理解', B: '実行順・状態遷移', C: 'Java固有ルール', D: 'API・語彙' }[category]}${questions.filter((question) => question.category === category).length} 問`
       )),
@@ -47,7 +76,7 @@ describe('Home', () => {
     await user.click(screen.getByRole('radio', { name: 'ランダム' }));
     await user.click(screen.getByRole('radio', { name: '速い' }));
     expect(toggle.textContent).toContain('ランダム · 速い');
-    expect(JSON.parse(window.localStorage.getItem(DRILL_PREFERENCES_STORAGE_KEY)!)).toEqual({ order: 'random', tempo: 'fast' });
+    expect(JSON.parse(window.localStorage.getItem(DRILL_PREFERENCES_STORAGE_KEY)!)).toEqual({ order: 'random', tempo: 'fast', questionCount: 'all' });
   });
 
   it.each(['mixed', 'A', 'B', 'C', 'D'] as const)('starts course %s immediately with the saved settings', async (course) => {
@@ -57,7 +86,7 @@ describe('Home', () => {
     await user.click(screen.getByRole('radio', { name: 'ランダム' }));
     const links = within(screen.getByRole('region', { name: 'ドリル' })).getAllByRole('link');
     const link = links[course === 'mixed' ? 0 : ['A', 'B', 'C', 'D'].indexOf(course) + 1]!;
-    expect(link.getAttribute('href')).toBe(`/drill?course=${course}&order=random&tempo=slow`);
+    expect(link.getAttribute('href')).toBe(`/drill?course=${course}&order=random&tempo=slow&count=all`);
     await user.click(link);
     const matching = course === 'mixed' ? questions : questions.filter((question) => question.category === course);
     expect(screen.getByRole('status').textContent).toBe(`1 / ${matching.length} 問`);
@@ -67,7 +96,7 @@ describe('Home', () => {
 
   it('leaves a launched Drill for Home only after confirming 終了', async () => {
     const user = setup();
-    await user.click(screen.getByRole('link', { name: /^すべて/ }));
+    await user.click(screen.getByRole('link', { name: /^全カテゴリ/ }));
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
     await user.click(screen.getByRole('button', { name: '終了' }));
     expect(screen.getByRole('status').textContent).toBe(`1 / ${questions.length} 問`);

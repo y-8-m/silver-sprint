@@ -25,6 +25,7 @@ import { getWeakQuestionIds } from '../stats/statsSelectors';
 import DrillController from './drill/DrillController';
 import CourseSelector from './drill/CourseSelector';
 import OrderSelector from './drill/OrderSelector';
+import QuestionCountSelector from './drill/QuestionCountSelector';
 import TempoSelector from './drill/TempoSelector';
 import styles from './DrillPage.module.css';
 
@@ -34,7 +35,7 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   // A launch from Home (?course=...) fixes the settings and starts at once; read once on mount.
   const [searchParams] = useSearchParams();
   const [launch] = useState(() => (mode === 'all' ? parseDrillLaunch(searchParams) : null));
-  const [settings, setSettings] = useState<SessionSettings>(launch?.settings ?? { course: 'mixed', order: 'sequential' });
+  const [settings, setSettings] = useState<SessionSettings>(launch?.settings ?? { course: 'mixed', order: 'sequential', questionCount: 'all' });
   const questionsById = useMemo(() => new Map(questions.map((question) => [question.id, question])), [questions]);
   // Only initialization and explicit RESET select a sequence. Rating changes
   // update Stats without removing IDs from the current session snapshot.
@@ -125,6 +126,7 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
         {mode !== 'review' && (
           <>
             <CourseSelector course={settings.course} onChange={(course) => changeSessionSettings({ ...settings, course })} />
+            <QuestionCountSelector questionCount={settings.questionCount} onChange={(questionCount) => changeSessionSettings({ ...settings, questionCount })} />
             <OrderSelector order={settings.order} onChange={(order) => changeSessionSettings({ ...settings, order })} />
           </>
         )}
