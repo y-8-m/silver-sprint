@@ -3,6 +3,10 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import InlineRenderer from '../components/InlineRenderer';
+import QuestionPreview from '../components/QuestionPreview';
+import { glossary } from '../data/glossary';
+import { inlineNodesToText } from '../data/inlineNodesToText';
+import { additionalControlFlowQuestions } from '../data/questions/controlFlow';
 import { code, term, text } from '../data/helpers';
 import type { GlossaryDictionary } from '../data/types';
 import GlossaryDetailDialog from './GlossaryDetailDialog';
@@ -71,6 +75,30 @@ function setup(id = 'alpha', glossary: GlossaryDictionary = dictionary) {
 }
 
 describe('Glossary interactions', () => {
+  it.each(additionalControlFlowQuestions)('renders the answer and explanation for $id and opens every glossary link', (question) => {
+    render(
+      <GlossaryProvider glossary={glossary}>
+        <QuestionPreview question={question} />
+        <GlossaryDetailDialog />
+      </GlossaryProvider>,
+    );
+    const article = screen.getByRole('article');
+    expect(within(article).getByRole('heading', { name: '解説' })).not.toBeNull();
+    expect(article.textContent).toContain(inlineNodesToText(question.answer));
+    const links = article.querySelectorAll<HTMLButtonElement>('button[data-glossary-id]');
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      const id = link.getAttribute('data-glossary-id') as keyof typeof glossary;
+      const entry = glossary[id];
+      fireEvent.click(link);
+      const dialog = screen.getByRole('dialog', { name: entry.term });
+      expect(dialog.textContent).toContain(inlineNodesToText(entry.short));
+      expect(dialog.textContent).toContain(`カテゴリ: ${entry.category}`);
+      fireEvent.click(within(dialog).getByRole('button', { name: '閉じる' }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    }
+  });
+
   it('shows short on pointer hover and hides it on pointer leave', async () => {
     const user = setup();
     const trigger = screen.getByRole('button', { name: '用語A' });

@@ -240,4 +240,83 @@ export const glossary = {
       { type: 'text', content: [code('n == 0 ? 10 : ++n'), text('で'), code('n'), text('が'), code('0'), text('なら、'), code('10'), text('が選ばれる。'), code('++n'), text('は評価されず、'), code('n'), text('は変わらない。')] },
     ],
   },
+  danglingElse: {
+    term: 'elseの対応関係',
+    category: '制御構文',
+    short: [text('elseは、対応するelseを持たない最も近いifと結びつく。')],
+    detail: [
+      { type: 'text', content: [text('波括弧のない入れ子のifでは、elseは内側の未対応のifに対応する。字下げで対応先は変わらない。外側のifに対応させるには、内側のifをブロックで囲んで文の構造を明示する。')] },
+    ],
+  },
+  switchFallThrough: {
+    term: 'フォールスルー',
+    category: '制御構文',
+    short: [code('case :'), text('形式で、後続のcaseやdefaultのラベルを越えて処理が続くこと。')],
+    detail: [
+      { type: 'text', content: [text('一致するラベルから実行を始めた後、breakなどで制御を移さなければ、後続のラベルでも条件を再判定せず処理を続ける。defaultも通過先になる。ラベルなしのbreakは最も内側のswitch文またはループを終了する。')] },
+      { type: 'text', content: [term('switchRule', 'switchルール'), text('（'), code('->'), text('形式）にはフォールスルーがない。switch式で結果の値を渡すにはbreakではなく'), term('yieldStatement', 'yield文'), text('を使う。')] },
+    ],
+    related: ['switchRule', 'switchExpression', 'yieldStatement', 'labeledJump'],
+  },
+  switchRule: {
+    term: 'switchルール',
+    category: '制御構文',
+    short: [code('case 値 ->'), text('や'), code('default ->'), text('の形式。選ばれたルールから次のルールへフォールスルーしない。')],
+    detail: [
+      { type: 'text', content: [text('switch文と'), term('switchExpression', 'switch式'), text('の両方で使える。矢印の右側には式・ブロック・throw文を書けるが、switch文で式を書く場合は文として使える式に限られる。'), code('->'), text('だけでswitch式と判断しない。')] },
+      { type: 'text', content: [text('Java SE 17の標準仕様でセレクタに使える型はbyte・short・char・int、Byte・Short・Character・Integer、String、enum。longやパターンを使ったswitchは、この標準仕様の範囲に含まれない。caseは定数式またはenum定数名で、同じswitchブロック内で値を重複させられない。')] },
+    ],
+    related: ['switchFallThrough', 'switchExpression'],
+  },
+  switchExpression: {
+    term: 'switch式',
+    category: '制御構文',
+    short: [text('switch全体が値を生成し、代入や引数などに利用できる式。')],
+    detail: [
+      { type: 'text', content: [text('switch文は処理を分岐させる文、switch式は結果の値を持つ式。switch式では'), term('switchExhaustiveness', '網羅性'), text('が必要で、結果の値を生成せず正常終了する経路は許されない。throwなどで正常終了しない経路は許される。')] },
+      { type: 'text', content: [code('case 1 -> 10;'), text('は10を結果とする。ブロック内から結果を渡すには'), term('yieldStatement', 'yield文'), text('を使う。'), code('case :'), text('形式も使えるが、その場合も正常に評価を終えるにはyieldで値を渡す。')] },
+    ],
+    related: ['switchRule', 'yieldStatement', 'switchExhaustiveness'],
+  },
+  yieldStatement: {
+    term: 'yield文',
+    category: '制御構文',
+    short: [code('yield 式;'), text('の形で、最も内側のswitch式に結果の値を渡す。')],
+    detail: [
+      { type: 'text', content: [code('yield'), text('は式を評価し、その値で対象の'), term('switchExpression', 'switch式'), text('の評価を終える。メソッドを終了するreturnとは異なり、switch式の後の処理は続く。')] },
+      { type: 'text', content: [text('breakはswitch文やループなどから抜けるための文で、結果の値は渡さない。yieldはswitch文の終了には使えず、breakをswitch式の結果生成の代わりにも使えない。')] },
+    ],
+    related: ['switchExpression', 'labeledJump'],
+  },
+  switchExhaustiveness: {
+    term: 'switch式の網羅性',
+    category: '制御構文',
+    short: [text('switch式は、セレクタが取り得るすべての値を扱える必要がある。')],
+    detail: [
+      { type: 'text', content: [text('Java SE 17の標準仕様では、enum以外のセレクタを使う'), term('switchExpression', 'switch式'), text('にはdefaultが必要。enumでは全定数をcaseに列挙すれば、defaultなしでも網羅性を満たす。変数の初期値が特定のcaseと一致していても、網羅性の条件は省略されない。')] },
+      { type: 'text', content: [text('この条件を満たさないコードはコンパイルエラーになる。網羅性はnullをcaseで扱うことを意味しない。Java SE 17の標準仕様では、セレクタの評価結果がnullなら実行時にNullPointerExceptionが発生する。')] },
+    ],
+    related: ['switchExpression', 'switchRule'],
+  },
+  enhancedFor: {
+    term: '拡張for文',
+    category: '制御構文',
+    short: [code('for (型 変数 : 対象)'), text('の形で、配列やIterableの要素を順に取り出す文。')],
+    detail: [
+      { type: 'text', content: [text('各反復で要素の値をループ変数に代入する。'), term('primitiveType', 'プリミティブ型'), text('ならプリミティブ値、参照型なら'), term('reference', '参照'), text('がコピーされる。ループ変数への再代入は、元の配列要素を置き換えない。')] },
+      { type: 'text', content: [text('参照型の要素では、ループ変数を通して参照先のオブジェクトの状態を変更できる場合がある。変数への再代入と、参照先の状態変更を区別する。')] },
+    ],
+    related: ['primitiveType', 'reference', 'labeledJump'],
+  },
+  labeledJump: {
+    term: 'ラベル付きbreak / continue',
+    category: '制御構文',
+    short: [text('breakは指定したラベルの文を終了し、continueは指定したラベルのループの次の反復へ進む。')],
+    detail: [
+      { type: 'text', content: [text('ラベルなしのbreakは最も内側のswitch文またはループを終了する。'), code('break outer;'), text('は、それを囲むouterラベルの文を終了する。ラベルの対象はループだけでなく、ブロックなどの文でもよい。')] },
+      { type: 'text', content: [text('ラベルなしのcontinueは最も内側のループを継続する。'), code('continue outer;'), text('の対象は、それを囲むouterラベルのループである必要がある。基本forなら更新式へ、whileやdo-whileなら条件判定へ進み、ループ自体は終了しない。')] },
+      { type: 'text', content: [text('任意の位置へ移動するgotoではない。また、breakやcontinueでswitch式の外へ飛び出すことはできない。switch式に結果を渡すには'), term('yieldStatement', 'yield文'), text('を使う。')] },
+    ],
+    related: ['switchFallThrough', 'yieldStatement', 'enhancedFor'],
+  },
 } satisfies GlossaryDictionary;

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { questions } from '../data/questions';
+import { additionalControlFlowQuestions } from '../data/questions/controlFlow';
 import type { Category } from '../data/types';
 import { buildQuestionSequence } from './sessionSequence';
 
@@ -8,6 +9,18 @@ const material = (['C', 'B', 'C', 'A', 'B', 'D', 'A'] as const).map((category, i
 }));
 
 describe('buildQuestionSequence', () => {
+  it.each(['sequential', 'random'] as const)('includes every control-flow question exactly once in %s drills and category courses', (order) => {
+    const newIds = new Set(additionalControlFlowQuestions.map(({ id }) => id));
+    for (const course of ['mixed', 'A', 'B', 'C', 'D'] as const) {
+      const sequence = buildQuestionSequence(questions, { course, order }, () => 0.5);
+      const expected = additionalControlFlowQuestions
+        .filter((question) => course === 'mixed' || question.category === course)
+        .map(({ id }) => id);
+      expect(sequence.filter((id) => newIds.has(id)).sort()).toEqual(expected.sort());
+      expect(new Set(sequence).size).toBe(sequence.length);
+    }
+  });
+
   it('keeps every ID in material order for Mixed + Sequential', () => {
     expect(buildQuestionSequence(material, { course: 'mixed', order: 'sequential' }))
       .toEqual(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7']);

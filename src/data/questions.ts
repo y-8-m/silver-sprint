@@ -1,6 +1,7 @@
 import { code, term, text } from './helpers';
 import { additionalVariableQuestions } from './questions/variables';
 import { additionalOperatorQuestions } from './questions/operators';
+import { additionalControlFlowQuestions } from './questions/controlFlow';
 import type { Question } from './types';
 
 export const questions = [
@@ -243,4 +244,5 @@ class Main {
   },
   ...additionalVariableQuestions,
   ...additionalOperatorQuestions,
+  ...additionalControlFlowQuestions,
 ] satisfies Question[];

@@ -3,6 +3,8 @@ import { glossary } from './glossary';
 import { term, text } from './helpers';
 import { questions } from './questions';
 import { additionalOperatorQuestions } from './questions/operators';
+import { additionalControlFlowQuestions } from './questions/controlFlow';
+import { inlineNodesToText } from './inlineNodesToText';
 import type { ComparisonBlock, GlossaryDictionary, Question } from './types';
 import { validateContent } from './validate';
 
@@ -41,9 +43,9 @@ const knownGlossary = {
 const missingReference = term('missing', '存在しない用語');
 
 describe('validateContent', () => {
-  it('accepts all thirty questions and seventeen glossary entries with valid glossary references', () => {
-    expect(questions).toHaveLength(30);
-    expect(Object.keys(glossary)).toHaveLength(17);
+  it('accepts all forty-five questions and twenty-five glossary entries with valid glossary references', () => {
+    expect(questions).toHaveLength(45);
+    expect(Object.keys(glossary)).toHaveLength(25);
     expect(validateContent(questions, glossary)).toEqual({ valid: true, issues: [] });
   });
 
@@ -81,8 +83,8 @@ describe('validateContent', () => {
       ['short-circuit-or', 'B'],
       ['conditional-operator-evaluation', 'B'],
     ]);
-    expect(questions.slice(16)).toEqual(additionalOperatorQuestions);
-    expect(new Set(questions.map(({ id }) => id)).size).toBe(30);
+    expect(questions.slice(16, 30)).toEqual(additionalOperatorQuestions);
+    expect(new Set(questions.map(({ id }) => id)).size).toBe(45);
     expect(Object.fromEntries(['A', 'B', 'C', 'D'].map((category) => [
       category, additionalOperatorQuestions.filter((question) => question.category === category).length,
     ]))).toEqual({ A: 1, B: 8, C: 5, D: 0 });
@@ -109,7 +111,7 @@ describe('validateContent', () => {
   });
 
   it('adds the eight operator glossary entries with the intended Japanese terms and categories', () => {
-    expect(Object.entries(glossary).slice(9).map(([id, { term, category }]) => [id, term, category])).toEqual([
+    expect(Object.entries(glossary).slice(9, 17).map(([id, { term, category }]) => [id, term, category])).toEqual([
       ['localVariableTypeInference', 'ローカル変数の型推論', '変数'],
       ['remainderOperator', '剰余演算子', '演算子'],
       ['prefixIncrement', '前置インクリメント', '演算子'],
@@ -119,6 +121,62 @@ describe('validateContent', () => {
       ['shortCircuitEvaluation', '短絡評価', '演算子'],
       ['conditionalOperator', '条件演算子', '演算子'],
     ]);
+  });
+
+  it('appends the fifteen control-flow questions with the specified categories and answers', () => {
+    expect(questions.slice(30)).toEqual(additionalControlFlowQuestions);
+    expect(additionalControlFlowQuestions.map((question) => [
+      question.id, question.category, inlineNodesToText(question.answer),
+    ])).toEqual([
+      ['if-dangling-else', 'B', '2'],
+      ['if-int-condition', 'C', 'コンパイルエラー。'],
+      ['switch-colon-fall-through', 'B', 'BCD'],
+      ['switch-arrow-no-fall-through', 'B', 'BX'],
+      ['switch-expression-yield-value', 'B', '21'],
+      ['switch-expression-non-exhaustive', 'C', 'コンパイルエラー。'],
+      ['switch-long-selector', 'C', 'コンパイルエラー。'],
+      ['switch-duplicate-constant', 'C', 'コンパイルエラー。'],
+      ['for-condition-update-order', 'B', '012:3'],
+      ['for-continue-update', 'B', '4'],
+      ['while-do-while-first-check', 'B', 'D'],
+      ['enhanced-for-primitive-copy', 'B', '1:3'],
+      ['switch-expression-block-missing-yield', 'C', 'コンパイルエラー。'],
+      ['labeled-break-nested-loop', 'B', '4'],
+      ['labeled-continue-nested-loop', 'B', '3'],
+    ]);
+    const counts = (data: Question[]) => Object.fromEntries(['A', 'B', 'C', 'D'].map((category) => [
+      category, data.filter((question) => question.category === category).length,
+    ]));
+    expect(counts(questions.slice(0, 30))).toEqual({ A: 3, B: 13, C: 13, D: 1 });
+    expect(counts(additionalControlFlowQuestions)).toEqual({ A: 0, B: 10, C: 5, D: 0 });
+    expect(counts(questions)).toEqual({ A: 3, B: 23, C: 18, D: 1 });
+  });
+
+  it('sets timeWeight only on the six specified control-flow questions', () => {
+    const weightedIds = new Set([
+      'if-dangling-else', 'switch-colon-fall-through', 'switch-expression-yield-value',
+      'switch-expression-block-missing-yield', 'labeled-break-nested-loop', 'labeled-continue-nested-loop',
+    ]);
+    for (const question of additionalControlFlowQuestions) {
+      expect(question.timeWeight, question.id).toBe(weightedIds.has(question.id) ? 1.5 : undefined);
+    }
+  });
+
+  it('adds eight distinct control-flow glossary IDs after the original seventeen entries', () => {
+    const entries = Object.entries(glossary).slice(17);
+    expect(entries.map(([id, entry]) => [id, entry.term, entry.category])).toEqual([
+      ['danglingElse', 'elseの対応関係', '制御構文'],
+      ['switchFallThrough', 'フォールスルー', '制御構文'],
+      ['switchRule', 'switchルール', '制御構文'],
+      ['switchExpression', 'switch式', '制御構文'],
+      ['yieldStatement', 'yield文', '制御構文'],
+      ['switchExhaustiveness', 'switch式の網羅性', '制御構文'],
+      ['enhancedFor', '拡張for文', '制御構文'],
+      ['labeledJump', 'ラベル付きbreak / continue', '制御構文'],
+    ]);
+    const originalIds = Object.keys(glossary).slice(0, 17);
+    expect(entries.every(([id]) => !originalIds.includes(id))).toBe(true);
+    expect(new Set(Object.keys(glossary)).size).toBe(25);
   });
 
   it('detects a duplicate Question ID', () => {
