@@ -102,6 +102,7 @@ describe('Review Drill', () => {
   it.each(['/drill', '/review'])('retries and returns Home from the %s completion screen', (path) => {
     setup(recordRating(createEmptyStats(), firstId, 'unknown', answeredAt), path, [questions[0]!]);
     click('開始');
+    click('一時停止');
     click('答えを見る');
     click('評価せずに完了');
     const finished = within(screen.getByRole('heading', { name: path === '/review' ? '復習完了' : 'ドリル完了' }).closest('section')!);
@@ -111,7 +112,9 @@ describe('Review Drill', () => {
     click('もう一度');
     expect(screen.getByRole('button', { name: '開始' })).not.toBeNull();
     click('開始');
-    click('答えを見る');
+    expect(screen.getByRole('button', { name: '一時停止' })).not.toBeNull();
+    advance(10000);
+    expect(screen.getByRole('heading', { name: '答え' })).not.toBeNull();
     click('評価せずに完了');
     fireEvent.click(screen.getByRole('link', { name: 'ホームへ' }));
     expect(screen.getByRole('heading', { name: 'Silver Sprint' })).not.toBeNull();

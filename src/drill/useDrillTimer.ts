@@ -55,6 +55,9 @@ export function useDrillTimer({ durationMs, paused, enabled, resetKey, onExpire 
       }
     };
 
+    // The interval refreshes the display; the timeout separately schedules an update at the deadline.
+    // Both can be delayed in background tabs, so update calculates remaining time from Date.now().
+    // period.expired prevents duplicate expiration handling when either timer runs.
     intervalId = setInterval(update, 100);
     timeoutId = setTimeout(update, period.remainingMs);
     return () => {

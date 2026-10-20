@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { StrictMode } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -37,9 +38,9 @@ afterAll(() => {
 
 function setup(path = '/drill?course=mixed') {
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <StrictMode><MemoryRouter initialEntries={[path]}>
       <AppRoutes questions={questions} glossary={glossary} />
-    </MemoryRouter>,
+    </MemoryRouter></StrictMode>,
   );
 }
 
@@ -76,12 +77,12 @@ describe('Drill key operations', () => {
     press('1');
     expect(progress()).toBe(`1 / ${questions.length} 問`);
     expect(window.localStorage.getItem(STATS_STORAGE_KEY)).toBeNull();
-    for (const [key, field] of [['1', 'knownCount'], ['2', 'unsureCount'], ['3', 'unknownCount']] as const) {
+    for (const [index, [key, field]] of ([['1', 'knownCount'], ['2', 'unsureCount'], ['3', 'unknownCount']] as const).entries()) {
       press('Enter');
       press(key);
       const stored = JSON.parse(window.localStorage.getItem(STATS_STORAGE_KEY)!) as { questions: Record<string, Record<string, number>> };
-      const counts = Object.values(stored.questions).map((record) => record[field]);
-      expect(counts).toContain(1);
+      expect(stored.questions[questions[index]!.id]?.[field]).toBe(1);
+      expect(Object.keys(stored.questions)).toHaveLength(index + 1);
     }
     expect(progress()).toBe(`4 / ${questions.length} 問`);
   });

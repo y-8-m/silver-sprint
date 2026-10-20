@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { Rating } from '../stats/statsTypes';
 
 export type DrillKeyHandlers = {
@@ -17,7 +17,10 @@ const ACTIVATABLE = 'button, a[href], summary';
 
 export function useDrillKeys(enabled: boolean, answering: boolean, handlers: DrillKeyHandlers): void {
   const latest = useRef({ answering, handlers });
-  latest.current = { answering, handlers };
+
+  useLayoutEffect(() => {
+    latest.current = { answering, handlers };
+  }, [answering, handlers]);
 
   useEffect(() => {
     if (!enabled) return;

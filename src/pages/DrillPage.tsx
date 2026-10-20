@@ -77,7 +77,9 @@ export default function DrillPage({ mode = 'all', questions, valid, statsReposit
   const glossaryOpen = glossary != null && glossary.selectedGlossaryId !== null;
   const helpOpen = useHelp()?.open ?? false;
   const overlayOpen = glossaryOpen || helpOpen;
-  useEffect(() => setManualPauseKey(null), [resetKey]);
+  useEffect(() => {
+    setManualPauseKey(null);
+  }, [resetKey]);
   // On advance, move focus to the new question when the rating controls become unavailable.
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
